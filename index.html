@@ -431,6 +431,7 @@
       <p class="racesub">Every half pint moves your glass one furlong, left to right, towards the flag. The board runs all night — it only resets when you tap <em>New day</em>. Friendly rivalry only; it's a marathon, not a sprint. 🐎</p>
       <p class="racestatus" id="racestatus"><span class="dot2"></span>Checking for live connection…</p>
       <div class="chips" id="crewchips" style="margin-top:10px" hidden></div>
+      <p class="counts" id="crewcaption" style="margin:4px 2px 0"></p>
     </div>
     <div id="joinbox" class="infocard" style="margin-top:14px" hidden>
       <h3>Saddle up</h3>
@@ -481,7 +482,7 @@
       <div class="tgrid" id="tgrid"></div>
     </div>
     <div class="btnrow">
-      <button id="resetbtn" class="btn danger">Clear everything</button>
+      <button id="resetbtn" class="btn danger">Clear my drinks</button>
     </div>
   </section>
 
@@ -505,16 +506,14 @@
     </div>
     <div class="infocard">
       <h3>How this works</h3>
-      <p class="mut">Tap any drink to log halves and pints, give it a 👍 or 👎, and jot a note. Everything saves to <strong>your own phone</strong> automatically — no signal needed once the page has loaded. Use <em>Share my tally</em> to send your list to the group chat.</p>
-      <p class="mut">Numbers match the festival programme, so just tell the bar the number. If a cask runs dry, open the drink and <em>Mark sold out</em> — then use the <em>Hide sold out</em> chip to sweep them away. Found something that's not listed? Add it yourself at the bottom of the menu.</p>
-      <p class="mut">The <strong>Race</strong> tab is the Half-Pint Handicap: every half pint is a furlong. Nothing resets at midnight — drink till 1am if you like; the board only starts fresh when someone taps <em>New day</em> on their own phone (My Night tab).</p>
-      <p class="mut"><strong>Getting everyone on the board:</strong> each phone keeps its own list, and you swap them through the group chat. Tap <em>Share my tally</em> and send it; when someone else sends theirs, open the Race tab and tap <em>📋 Paste from chat</em>. Their glass, ratings and notes all land at once. Do it whenever you fancy a look at the standings — a couple of swaps a session is plenty, and it works with no signal.</p>
-      <p class="mut">There's a <strong>Trophy Cabinet</strong> too (My Night tab): trophies unlock as you explore — perries, stouts, counties, tasting notes, going the distance — and show next to your name on the race. The crew's 👍s crown a <strong>Best in Show</strong> on the Race tab, and the biggest stinker gets named and shamed.</p>
-      <p class="mut"><strong>Crews:</strong> met another group who want in? They scan the QR, enter their name and a crew name of their own — they get their own race and your board stays yours. A crew switcher appears on the Race tab, with an <em>All crews</em> view that scores crew against crew. <strong>To join a crew that already exists:</strong> Race tab → tap that crew's name → tap <em>🤝 Join</em>. Spelling doesn't matter — "The Lads" and "the lads" count as the same crew, and the crew box suggests existing names as you type. Notes and Best in Show stay within your own crew.</p>
+      <p class="mut"><strong>Logging drinks.</strong> Tap a drink, add halves or pints, give it a 👍 or 👎 and jot a note. Numbers match the festival programme, so you can just tell the bar the number. Stuck for a choice? Tap 🎲.</p>
+      <p class="mut"><strong>Your crew.</strong> You're in one crew at a time. Everyone in it sees each other's pints, ratings and notes, live. On the Race tab you can tap another crew's name to peek at their race — that doesn't move you, it's just a look.</p>
+      <p class="mut"><strong>The race.</strong> Every half pint moves your glass a furlong. It runs all night and only resets when you tap <em>New day</em> on your own phone. Ratings, notes and trophies always carry over.</p>
+      <p class="mut"><strong>If the signal drops</strong> everything keeps working on your phone and syncs when you're back. Cask run dry? Open it and tap <em>Mark sold out</em>. Something not listed? Add it at the bottom of the menu.</p>
     </div>
     <div class="infocard">
       <h3>Small print</h3>
-      <p class="mut">List taken from the official festival lists (revised 20 &amp; 26 Aug). The organisers warn it's subject to change and not everything is on at once — treat it as a guide. Style groupings are our best guess from the descriptions. Units are approximate (half = 284 ml, pint = 568 ml).</p>
+      <p class="mut">Drinks taken from the festival's official lists — the organisers warn these change and not everything is on at once, so treat it as a guide. Units are approximate (half = 284ml, pint = 568ml). Your drinks are stored on your own phone; what you share with your crew travels over the internet, so keep notes printable.</p>
       <p class="mut">Source: <a href="https://tendring.camra.org.uk/clacton-on-sea-real-ale-cider-festival/" target="_blank" rel="noopener">tendring.camra.org.uk</a></p>
     </div>
   </section>
@@ -654,7 +653,7 @@ function rebuildDrinks(){
 
 /* ================= STATE ================= */
 const KEY = "clacton-ale-trail-2026";
-let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], crewOwner:false};
+let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], blockedCrews:[], crewOwner:false};
 try{ const raw = localStorage.getItem(KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
 /* The "day" only rolls over when someone taps New Day — no automatic midnight reset. */
 if(!state.sessionDay){
@@ -1155,7 +1154,7 @@ function armTwoStage(btn, armedLabel, action){
 }
 
 document.getElementById("resetbtn").addEventListener("click", e=>{
-  armTwoStage(e.currentTarget, "Sure? Tap again to wipe", ()=>{
+  armTwoStage(e.currentTarget, "Wipe MY drinks? Tap again", ()=>{
     state = {name: state.name, drinks: {}, mates: {}, custom: state.custom||[], soldOut: state.soldOut||{}, lastDrink: null, sessionDay: state.sessionDay};
     save(); refreshStats(); renderList(); renderRace(); scheduleSync();
   });
@@ -1301,13 +1300,13 @@ function myRider(){
 let liveRiders = {};
 let othersCache = {};
 function crewCaptainBlocks(){
-  /* removals published by the person who started your crew */
   const out = [];
   for(const r of Object.values(liveRiders)){
     if(r.own && crewKey(riderCrew(r)) === myCrewKey()) out.push(...(r.x||[]));
   }
   return out;
 }
+function isCrewBlocked(c){ return (state.blockedCrews||[]).includes(crewKey(c)); }
 function isBlocked(name){
   const k = crewKey(name);
   if((state.blocked||[]).includes(k)) return true;
@@ -1320,6 +1319,7 @@ function refreshOthers(){
     if(k === DEVICE_ID) continue;
     const nm = cleanName(r.n) || "Rider";
     if(isBlocked(nm)) continue;
+    if(isCrewBlocked(riderCrew(r))) continue;
     out[k] = {...r, n: nm};
   }
   for(const [n,r] of Object.entries(state.mates||{})){
@@ -1426,8 +1426,10 @@ function renderRace(){
   cc.hidden = !multiCrew;
   if(multiCrew){
     if(!crews.includes(raceView) && raceView !== "__all") raceView = myCrewKey();
-    cc.innerHTML = crews.map(c=>`<button class="chip${raceView===c?" on":""}" data-crew="${esc(c)}">${esc(crewLabel[c]||c)}${c===myCrewKey()?" ✓":""}</button>`).join("")
+    cc.innerHTML = crews.map(c=>`<button class="chip${raceView===c?" on":""}" data-crew="${esc(c)}">${esc(crewLabel[c]||c)}${c===myCrewKey()?" ✓ yours":""}</button>`).join("")
       + `<button class="chip${raceView==="__all"?" on":""}" data-crew="__all">All crews</button>`;
+    const cap = document.getElementById("crewcaption");
+    if(cap) cap.textContent = "You're in " + myCrew() + ". Tapping another crew just peeks at their race — your drinks stay with yours.";
   } else {
     raceView = myCrewKey();
   }
@@ -1489,11 +1491,17 @@ function manageHTML(riders){
   const others = riders.filter(r=>r.name !== mine);
   const blocked = (state.blocked||[]);
   if(!others.length && !blocked.length) return "";
-  let h = `<div class="showcard" id="managecard"><div class="showrow"><strong>⚙️ Manage ${esc(myCrew())}</strong> <span class="showmut">— you started this crew, so only you see this. Removing someone takes them off your board and your crew's boards.</span></div>`;
-  if(others.length) h += `<div class="managerow">` + others.map(r=>
+  const otherCrews = [...new Set(Object.values(liveRiders).map(r=>riderCrew(r)))]
+      .filter(c => crewKey(c) !== myCrewKey() && !isCrewBlocked(c));
+  let h = `<div class="showcard" id="managecard"><div class="showrow"><strong>⚙️ Manage</strong> <span class="showmut">— you started ${esc(myCrew())}, so only you see this.</span></div>`;
+  if(others.length) h += `<div class="showrow showmut">Remove someone from ${esc(myCrew())}:</div><div class="managerow">` + others.map(r=>
       `<button class="minibtn del" data-remove="${esc(r.name)}">✕ ${esc(r.name)}</button>`).join("") + `</div>`;
-  if(blocked.length) h += `<div class="showrow showmut">Removed: ` + blocked.map(k=>
-      `<button class="minibtn" data-unremove="${esc(k)}">↩ ${esc(k)}</button>`).join(" ") + `</div>`;
+  if(otherCrews.length) h += `<div class="showrow showmut">Hide a whole crew from your app:</div><div class="managerow">` + otherCrews.map(c=>
+      `<button class="minibtn del" data-removecrew="${esc(c)}">✕ ${esc(c)}</button>`).join("") + `</div>`;
+  const bc = (state.blockedCrews||[]);
+  if(blocked.length || bc.length) h += `<div class="showrow showmut">Removed: ` +
+      blocked.map(k=>`<button class="minibtn" data-unremove="${esc(k)}">↩ ${esc(k)}</button>`).join(" ") + " " +
+      bc.map(k=>`<button class="minibtn" data-unremovecrew="${esc(k)}">↩ ${esc(k)} (crew)</button>`).join(" ") + `</div>`;
   return h + `</div>`;
 }
 
@@ -1504,7 +1512,7 @@ function earlierHTML(list){
 }
 
 /* --- LIVE SYNC: anonymous pub/sub. No accounts. Works for anyone with the link. --- */
-const SYNC_TOPIC = "clactonfest_2c9697b2f108c7c359f6";
+const SYNC_TOPIC = "clactonfest_12af43223975513d5851";
 const SYNC_URL = "https://ntfy.sh/" + SYNC_TOPIC;
 let syncTimer = null, lastPushAt = 0, liveState = "connecting", es = null, pushing = false;
 
@@ -1706,6 +1714,21 @@ document.getElementById("standings").addEventListener("click", e=>{
     state.blocked = [...new Set([...(state.blocked||[]), crewKey(nm)])];
     save(); showToast("✕ " + nm + " removed from the crew");
     renderRace(); renderList(); scheduleSync();
+    return;
+  }
+  const rc = e.target.closest("[data-removecrew]");
+  if(rc){
+    const c = rc.dataset.removecrew;
+    state.blockedCrews = [...new Set([...(state.blockedCrews||[]), crewKey(c)])];
+    save(); showToast("✕ " + c + " hidden from your app");
+    renderRace(); renderList();
+    return;
+  }
+  const uc = e.target.closest("[data-unremovecrew]");
+  if(uc){
+    state.blockedCrews = (state.blockedCrews||[]).filter(k=>k !== uc.dataset.unremovecrew);
+    save(); showToast("↩ Crew shown again");
+    renderRace(); renderList();
     return;
   }
   const un = e.target.closest("[data-unremove]");
