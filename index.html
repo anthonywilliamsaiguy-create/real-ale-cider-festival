@@ -348,6 +348,7 @@
   .standing .smeta{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
   code{background:var(--surface2);border-radius:4px;padding:1px 5px;font-size:12px}
 
+  .managerow{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
   .notesaved{color:var(--good);font-weight:700;font-size:11.5px;margin-left:6px}
   .donebtn{width:100%;padding:10px 14px;font-size:14px}
   .card.flash{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);transition:box-shadow .3s,border-color .3s}
@@ -653,7 +654,7 @@ function rebuildDrinks(){
 
 /* ================= STATE ================= */
 const KEY = "clacton-ale-trail-2026";
-let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:""};
+let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], crewOwner:false};
 try{ const raw = localStorage.getItem(KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
 /* The "day" only rolls over when someone taps New Day — no automatic midnight reset. */
 if(!state.sessionDay){
@@ -1295,17 +1296,34 @@ function myRider(){
     if(e.r || e.note) reviews[id] = {r:e.r||0, note:(e.note||"").slice(0,280)};
   }
   const last = state.lastDrink && byId[state.lastDrink] ? byId[state.lastDrink].name : "";
-  return {id:DEVICE_ID, n:cleanName(state.name), h:hh, u:Math.round(u*10)/10, last, day:dk, t:Date.now(), reviews, b:computeBadges(), c:myCrew()};
+  return {id:DEVICE_ID, n:cleanName(state.name), own:state.crewOwner?1:0, x:(state.blocked||[]), h:hh, u:Math.round(u*10)/10, last, day:dk, t:Date.now(), reviews, b:computeBadges(), c:myCrew()};
 }
 let liveRiders = {};
 let othersCache = {};
+function crewCaptainBlocks(){
+  /* removals published by the person who started your crew */
+  const out = [];
+  for(const r of Object.values(liveRiders)){
+    if(r.own && crewKey(riderCrew(r)) === myCrewKey()) out.push(...(r.x||[]));
+  }
+  return out;
+}
+function isBlocked(name){
+  const k = crewKey(name);
+  if((state.blocked||[]).includes(k)) return true;
+  if(crewKey(cleanName(state.name)) === k) return false;   /* never block yourself */
+  return crewCaptainBlocks().includes(k);
+}
 function refreshOthers(){
   const out = {};
   for(const [k,r] of Object.entries(liveRiders)){
     if(k === DEVICE_ID) continue;
-    out[k] = {...r, n: cleanName(r.n) || "Rider"};
+    const nm = cleanName(r.n) || "Rider";
+    if(isBlocked(nm)) continue;
+    out[k] = {...r, n: nm};
   }
   for(const [n,r] of Object.entries(state.mates||{})){
+    if(isBlocked(n)) continue;
     if(Object.values(out).some(x=>crewKey(x.n) === crewKey(n))) continue;
     out["p:"+n] = {...r, n};
   }
@@ -1462,7 +1480,21 @@ function renderRace(){
     const gap = i===0 ? "leading" : pintsLabel(riders[0].h - r.h)+" behind";
     const cabinet = (r.b||[]).map(id=>BADGE_BY_ID[id]?BADGE_BY_ID[id].e:"").join("");
     return `<div class="standing"><span class="pos">${medals[i]||ordinal(i+1)}</span><div class="smain"><div class="sname">${esc(r.name)}${cabinet?` <span class="sbadges" title="Trophies">${cabinet}</span>`:""}</div><div class="smeta">${pintsLabel(r.h)} · ~${fmt(r.u)} units${r.last?" · last: "+esc(r.last):""} · ${gap}</div></div></div>`;
-  }).join("") + crewCompare + crewShowHTML(showAll ? null : viewNames) + earlierHTML(earlier);
+  }).join("") + crewCompare + crewShowHTML(showAll ? null : viewNames) + manageHTML(riders) + earlierHTML(earlier);
+}
+
+function manageHTML(riders){
+  if(!state.crewOwner) return "";
+  const mine = cleanName(state.name);
+  const others = riders.filter(r=>r.name !== mine);
+  const blocked = (state.blocked||[]);
+  if(!others.length && !blocked.length) return "";
+  let h = `<div class="showcard" id="managecard"><div class="showrow"><strong>⚙️ Manage ${esc(myCrew())}</strong> <span class="showmut">— you started this crew, so only you see this. Removing someone takes them off your board and your crew's boards.</span></div>`;
+  if(others.length) h += `<div class="managerow">` + others.map(r=>
+      `<button class="minibtn del" data-remove="${esc(r.name)}">✕ ${esc(r.name)}</button>`).join("") + `</div>`;
+  if(blocked.length) h += `<div class="showrow showmut">Removed: ` + blocked.map(k=>
+      `<button class="minibtn" data-unremove="${esc(k)}">↩ ${esc(k)}</button>`).join(" ") + `</div>`;
+  return h + `</div>`;
 }
 
 function earlierHTML(list){
@@ -1667,6 +1699,24 @@ document.getElementById("crewchips").addEventListener("click", e=>{
   renderRace();
 });
 
+document.getElementById("standings").addEventListener("click", e=>{
+  const rm = e.target.closest("[data-remove]");
+  if(rm){
+    const nm = rm.dataset.remove;
+    state.blocked = [...new Set([...(state.blocked||[]), crewKey(nm)])];
+    save(); showToast("✕ " + nm + " removed from the crew");
+    renderRace(); renderList(); scheduleSync();
+    return;
+  }
+  const un = e.target.closest("[data-unremove]");
+  if(un){
+    state.blocked = (state.blocked||[]).filter(k=>k !== un.dataset.unremove);
+    save(); showToast("↩ Allowed back in");
+    renderRace(); renderList(); scheduleSync();
+    return;
+  }
+});
+
 document.getElementById("track").addEventListener("click", e=>{
   const b = e.target.closest("#joincrewbtn"); if(!b) return;
   state.crew = b.dataset.crew.slice(0,24);
@@ -1725,7 +1775,10 @@ function submitWelcome(){
   const v = document.getElementById("wname").value.slice(0,24);
   if(!cleanName(v)){ document.getElementById("wname").focus(); return; }
   state.name = v;
-  state.crew = document.getElementById("wcrew").value.slice(0,24);
+  const typedCrew = document.getElementById("wcrew").value.slice(0,24);
+  const existing = Object.values(liveRiders).map(r=>crewKey(riderCrew(r)));
+  state.crewOwner = !!cleanName(typedCrew) && !existing.includes(crewKey(typedCrew));
+  state.crew = typedCrew;
   save();
   nameInput.value = v;
   crewInput.value = state.crew;
