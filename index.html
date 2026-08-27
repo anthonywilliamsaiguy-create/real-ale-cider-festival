@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#14100C">
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -532,7 +533,7 @@
 </nav>
 
 <script>
-const BUILD = 20;
+const BUILD = 21;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -1837,10 +1838,26 @@ window.addEventListener("scroll", ()=>{
   scrollSaveTimer = setTimeout(saveUi, 600);
 }, {passive:true});
 
+/* --- self-update: phones can cache the page, so check for a newer build --- */
+async function checkForUpdate(){
+  try{
+    const base = location.href.split("#")[0].split("?")[0];
+    const res = await fetch(base + "?cb=" + Date.now(), {cache:"no-store"});
+    const txt = await res.text();
+    const m = txt.match(/const BUILD = (\d+);/);
+    if(m && parseInt(m[1],10) > BUILD){
+      showToast("Updating the app...");
+      saveUi();
+      setTimeout(()=>location.replace(base + "?v=" + m[1]), 1200);
+    }
+  }catch(e){}
+}
+setTimeout(checkForUpdate, 4000);
+
 /* --- reconnect the live board whenever the app comes back to the front --- */
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ saveUi(); }
-  else { pullHistory(); startLive(); }
+  else { pullHistory(); startLive(); checkForUpdate(); }
 });
 window.addEventListener("online", ()=>{ pullHistory(); startLive(); scheduleSync(); });
 
