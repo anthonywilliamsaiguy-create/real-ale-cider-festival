@@ -533,7 +533,7 @@
 </nav>
 
 <script>
-const BUILD = 23;
+const BUILD = 24;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -655,7 +655,7 @@ function rebuildDrinks(){
 
 /* ================= STATE ================= */
 const KEY = "clacton-ale-trail-2026";
-let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], blockedCrews:[], crewOwner:false};
+let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], blockedCrews:[], crewOwner:false, ownedCrews:[]};
 try{ const raw = localStorage.getItem(KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
 /* The "day" only rolls over when someone taps New Day — no automatic midnight reset. */
 if(!state.sessionDay){
@@ -1755,7 +1755,9 @@ crewInput.addEventListener("input", ()=>{
   /* starting a brand new crew makes you its owner; joining an existing one does not */
   if(cleanName(typed) && crewKey(typed) !== myCrewKey()){
     const existing = Object.values(liveRiders).map(r=>crewKey(riderCrew(r)));
-    state.crewOwner = !existing.includes(crewKey(typed));
+    const ck = crewKey(typed);
+    state.crewOwner = !existing.includes(ck) || (state.ownedCrews||[]).includes(ck);
+    if(state.crewOwner) state.ownedCrews = [...new Set([...(state.ownedCrews||[]), ck])];
   }
   state.crew = typed; save();
   raceView = myCrewKey();
@@ -1804,7 +1806,9 @@ function submitWelcome(){
   state.name = v;
   const typedCrew = document.getElementById("wcrew").value.slice(0,24);
   const existing = Object.values(liveRiders).map(r=>crewKey(riderCrew(r)));
-  state.crewOwner = !!cleanName(typedCrew) && !existing.includes(crewKey(typedCrew));
+  const ck = crewKey(typedCrew);
+  state.crewOwner = !!cleanName(typedCrew) && (!existing.includes(ck) || (state.ownedCrews||[]).includes(ck));
+  if(state.crewOwner) state.ownedCrews = [...new Set([...(state.ownedCrews||[]), ck])];
   state.crew = typedCrew;
   save();
   nameInput.value = v;
