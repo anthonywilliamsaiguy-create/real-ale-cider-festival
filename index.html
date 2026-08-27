@@ -464,8 +464,17 @@
   <!-- ============ MY NIGHT PANEL ============ -->
   <section id="panel-night" class="panel">
     <div class="namerow">
-      <input id="myname" type="text" placeholder="Your name (for the shared tally)" maxlength="24">
-      <input id="mycrew" type="text" placeholder="Crew (optional)" maxlength="24" list="crewlist" style="flex:.8">
+      <input id="myname" type="text" placeholder="Your name" maxlength="24">
+    </div>
+    <div class="infocard" id="crewcard">
+      <h3>Your crew</h3>
+      <p class="mut" id="crewnow"></p>
+      <div class="namerow" style="margin:8px 0 0">
+        <input id="mycrew" type="text" placeholder="Name a crew to create it" maxlength="24" list="crewlist">
+        <button class="btn" id="crewsavebtn">Create</button>
+      </div>
+      <div id="crewjoinlist"></div>
+      <div id="managelist"></div>
     </div>
     <div class="bigstat">
       <div class="stat"><div class="n" id="st-drinks">0</div><div class="l">Drinks today</div></div>
@@ -533,7 +542,7 @@
 </nav>
 
 <script>
-const BUILD = 24;
+const BUILD = 25;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -1070,6 +1079,7 @@ function refreshStats(){
   const tl = document.getElementById("triedline");
   if(tl) tl.textContent = tried ? `You've explored ${tried} of ${DRINKS.length} drinks this festival. 🎯` : "";
   renderLog();
+  renderCrewCard();
   renderTrophies();
 }
 
@@ -1269,6 +1279,42 @@ function checkBadges(){
   scheduleSync();
 }
 
+function renderCrewCard(){
+  const now = document.getElementById("crewnow");
+  if(!now) return;
+  const inCrew = cleanName(state.crew);
+  now.innerHTML = inCrew
+    ? `You're in <strong>${esc(myCrew())}</strong>${state.crewOwner?' — you started it, so you can remove people below.':''}`
+    : `You're riding solo. Type a name below to start a crew, or tap one that's already going.`;
+  /* other crews you could join */
+  const crews = [...new Set(Object.values(liveRiders).map(r=>riderCrew(r)))]
+      .filter(c => crewKey(c) !== myCrewKey() && crewKey(c) !== "festival" && !isCrewBlocked(c));
+  const jl = document.getElementById("crewjoinlist");
+  jl.innerHTML = crews.length
+    ? `<p class="mut" style="margin-top:10px">Or join one that's already going:</p><div class="managerow">` +
+      crews.map(c=>`<button class="minibtn" data-joincrew="${esc(c)}">🤝 ${esc(c)}</button>`).join("") + `</div>`
+    : "";
+  /* riders you can take off your board */
+  const others = Object.values(othersCache).filter(r=>crewKey(riderCrew(r)) === myCrewKey());
+  const ml = document.getElementById("managelist");
+  let h = "";
+  if(others.length){
+    h += `<p class="mut" style="margin-top:12px">In ${esc(myCrew())} with you${state.crewOwner?" — tap to remove":" — tap to hide from your board"}:</p><div class="managerow">` +
+      others.map(r=>`<button class="minibtn del" data-remove="${esc(r.n)}">✕ ${esc(r.n)}</button>`).join("") + `</div>`;
+  }
+  const bl = (state.blocked||[]), bc = (state.blockedCrews||[]);
+  if(bl.length || bc.length){
+    h += `<p class="mut" style="margin-top:10px">Removed — tap to allow back:</p><div class="managerow">` +
+      bl.map(k=>`<button class="minibtn" data-unremove="${esc(k)}">↩ ${esc(k)}</button>`).join("") +
+      bc.map(k=>`<button class="minibtn" data-unremovecrew="${esc(k)}">↩ ${esc(k)} (crew)</button>`).join("") + `</div>`;
+  }
+  if(crews.length){
+    h += `<p class="mut" style="margin-top:10px">Hide another crew from your app:</p><div class="managerow">` +
+      crews.map(c=>`<button class="minibtn del" data-removecrew="${esc(c)}">✕ ${esc(c)}</button>`).join("") + `</div>`;
+  }
+  ml.innerHTML = h;
+}
+
 function renderTrophies(){
   const g = document.getElementById("tgrid"); if(!g) return;
   const earned = new Set(computeBadges());
@@ -1336,6 +1382,13 @@ function refreshOthers(){
     const meKey = crewKey(cleanName(state.name));
     for(const k of Object.keys(out)) if(crewKey(out[k].n) === meKey) delete out[k];
   }
+  /* same person open in two browsers = one rider, newest wins */
+  const byName = {};
+  for(const [k,r] of Object.entries(out)){
+    const nk = crewKey(r.n);
+    if(!byName[nk] || (r.t||0) > (out[byName[nk]].t||0)) byName[nk] = k;
+  }
+  for(const k of Object.keys(out)) if(!Object.values(byName).includes(k)) delete out[k];
   othersCache = out;
   return out;
 }
@@ -1480,7 +1533,7 @@ function renderRace(){
     const gap = i===0 ? "leading" : pintsLabel(riders[0].h - r.h)+" behind";
     const cabinet = (r.b||[]).map(id=>BADGE_BY_ID[id]?BADGE_BY_ID[id].e:"").join("");
     return `<div class="standing"><span class="pos">${medals[i]||ordinal(i+1)}</span><div class="smain"><div class="sname">${esc(r.name)}${cabinet?` <span class="sbadges" title="Trophies">${cabinet}</span>`:""}</div><div class="smeta">${pintsLabel(r.h)} · ~${fmt(r.u)} units${r.last?" · last: "+esc(r.last):""} · ${gap}</div></div></div>`;
-  }).join("") + crewCompare + crewShowHTML(showAll ? null : viewNames) + manageHTML(riders) + earlierHTML(earlier);
+  }).join("") + crewCompare + crewShowHTML(showAll ? null : viewNames) + earlierHTML(earlier);
 }
 
 function manageHTML(riders){
@@ -1763,7 +1816,45 @@ crewInput.addEventListener("input", ()=>{
   raceView = myCrewKey();
   scheduleSync();
 });
-crewInput.addEventListener("blur", ()=>{ renderRace(); renderList(); });
+crewInput.addEventListener("blur", ()=>{ renderRace(); renderList(); refreshStats(); });
+document.getElementById("crewsavebtn").addEventListener("click", ()=>{
+  const v = crewInput.value.slice(0,24);
+  if(!cleanName(v)){ crewInput.focus(); return; }
+  const ck = crewKey(v);
+  const existing = Object.values(liveRiders).map(r=>crewKey(riderCrew(r)));
+  state.crewOwner = !existing.includes(ck) || (state.ownedCrews||[]).includes(ck);
+  if(state.crewOwner) state.ownedCrews = [...new Set([...(state.ownedCrews||[]), ck])];
+  state.crew = v; save();
+  raceView = myCrewKey();
+  showToast(state.crewOwner ? ("You started " + v + " — it's yours to manage") : ("You've joined " + v));
+  refreshStats(); renderRace(); renderList(); scheduleSync();
+});
+document.getElementById("crewcard").addEventListener("click", e=>{
+  const j = e.target.closest("[data-joincrew]");
+  if(j){ crewInput.value = j.dataset.joincrew; document.getElementById("crewsavebtn").click(); return; }
+  const rm = e.target.closest("[data-remove]");
+  if(rm){
+    state.blocked = [...new Set([...(state.blocked||[]), crewKey(rm.dataset.remove)])];
+    save(); showToast("✕ " + rm.dataset.remove + " removed");
+    refreshStats(); renderRace(); renderList(); scheduleSync(); return;
+  }
+  const un = e.target.closest("[data-unremove]");
+  if(un){
+    state.blocked = (state.blocked||[]).filter(k=>k!==un.dataset.unremove);
+    save(); refreshStats(); renderRace(); renderList(); scheduleSync(); return;
+  }
+  const rc = e.target.closest("[data-removecrew]");
+  if(rc){
+    state.blockedCrews = [...new Set([...(state.blockedCrews||[]), crewKey(rc.dataset.removecrew)])];
+    save(); showToast("✕ " + rc.dataset.removecrew + " hidden");
+    refreshStats(); renderRace(); renderList(); return;
+  }
+  const uc = e.target.closest("[data-unremovecrew]");
+  if(uc){
+    state.blockedCrews = (state.blockedCrews||[]).filter(k=>k!==uc.dataset.unremovecrew);
+    save(); refreshStats(); renderRace(); renderList(); return;
+  }
+});
 
 /* --- first-open name prompt --- */
 const welcomeEl = document.getElementById("welcome");
