@@ -542,7 +542,7 @@
 </nav>
 
 <script>
-const BUILD = 28;
+const BUILD = 29;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -672,6 +672,18 @@ if(!state.sessionDay){
   state.sessionDay = seen.length ? seen[seen.length-1] : new Date().toLocaleDateString("en-CA");
 }
 function sessionKey(){ return state.sessionDay; }
+/* older builds saved a crew on every keystroke; drop the half-typed leftovers */
+(function tidyCrews(){
+  const oc = [...new Set(state.ownedCrews||[])];
+  const kept = oc.filter(k => !oc.some(o => o !== k && o.startsWith(k)));
+  if(kept.length !== oc.length){
+    state.ownedCrews = kept;
+    const lab = {};
+    for(const k of kept) if((state.crewLabels||{})[k]) lab[k] = state.crewLabels[k];
+    state.crewLabels = lab;
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  }
+})();
 function dayDate(d){ return String(d||"").split(".")[0]; }
 function startNewDay(){
   const base = new Date().toLocaleDateString("en-CA");
@@ -1824,19 +1836,7 @@ document.getElementById("track").addEventListener("click", e=>{
 
 const crewInput = document.getElementById("mycrew");
 crewInput.value = state.crew||"";
-crewInput.addEventListener("input", ()=>{
-  const typed = crewInput.value.slice(0,24);
-  /* starting a brand new crew makes you its owner; joining an existing one does not */
-  if(cleanName(typed) && crewKey(typed) !== myCrewKey()){
-    const existing = Object.values(liveRiders).map(r=>crewKey(riderCrew(r)));
-    const ck = crewKey(typed);
-    state.crewOwner = !existing.includes(ck) || (state.ownedCrews||[]).includes(ck);
-    if(state.crewOwner) state.ownedCrews = [...new Set([...(state.ownedCrews||[]), ck])];
-  }
-  state.crew = typed; save();
-  raceView = myCrewKey();
-  scheduleSync();
-});
+/* typing is just typing - the crew only changes when you tap Create */
 crewInput.addEventListener("blur", ()=>{ renderRace(); renderList(); refreshStats(); });
 document.getElementById("crewsavebtn").addEventListener("click", ()=>{
   const v = crewInput.value.slice(0,24);
