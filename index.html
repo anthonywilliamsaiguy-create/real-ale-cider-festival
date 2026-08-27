@@ -542,7 +542,7 @@
 </nav>
 
 <script>
-const BUILD = 27;
+const BUILD = 28;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -664,7 +664,7 @@ function rebuildDrinks(){
 
 /* ================= STATE ================= */
 const KEY = "clacton-ale-trail-2026";
-let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], blockedCrews:[], crewOwner:false, ownedCrews:[]};
+let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], blockedCrews:[], crewOwner:false, ownedCrews:[], crewLabels:{}};
 try{ const raw = localStorage.getItem(KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
 /* The "day" only rolls over when someone taps New Day — no automatic midnight reset. */
 if(!state.sessionDay){
@@ -691,6 +691,10 @@ for(const e of Object.values(state.drinks||{})){
   if(e){ delete e.h; delete e.p; }
 }
 function save(){
+  if(cleanName(state.crew)){
+    state.crewLabels = state.crewLabels || {};
+    state.crewLabels[crewKey(state.crew)] = cleanName(state.crew);
+  }
   try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
   try{ refreshNameUi(); }catch(e){}
 }
@@ -1290,11 +1294,22 @@ function renderCrewCard(){
   /* other crews you could join */
   const crews = [...new Set(Object.values(liveRiders).map(r=>riderCrew(r)))]
       .filter(c => crewKey(c) !== myCrewKey() && crewKey(c) !== "festival" && !isCrewBlocked(c));
+  /* your own crews, one tap to hop between them */
   const jl = document.getElementById("crewjoinlist");
-  jl.innerHTML = crews.length
+  const mineKeys = [...new Set((state.ownedCrews||[]).concat(inCrew ? [myCrewKey()] : []))];
+  let mineHtml = "";
+  if(mineKeys.length > 1){
+    mineHtml = `<p class="mut" style="margin-top:10px">Your crews — tap to switch:</p><div class="managerow">` +
+      mineKeys.map(k=>{
+        const label = (state.crewLabels||{})[k] || k;
+        const on = k === myCrewKey();
+        return `<button class="minibtn${on?" on":""}" data-switchcrew="${esc(label)}">${on?"● ":""}${esc(label)}</button>`;
+      }).join("") + `</div>`;
+  }
+  jl.innerHTML = mineHtml + (crews.length
     ? `<p class="mut" style="margin-top:10px">Or join one that's already going:</p><div class="managerow">` +
       crews.map(c=>`<button class="minibtn" data-joincrew="${esc(c)}">🤝 ${esc(c)}</button>`).join("") + `</div>`
-    : "";
+    : "");
   /* riders you can take off your board */
   const others = Object.values(othersCache).filter(r=>crewKey(riderCrew(r)) === myCrewKey());
   const ml = document.getElementById("managelist");
@@ -1303,7 +1318,11 @@ function renderCrewCard(){
     h += `<p class="mut" style="margin-top:12px">In ${esc(myCrew())} with you${state.crewOwner?" — tap to remove":" — tap to hide from your board"}:</p><div class="managerow">` +
       others.map(r=>`<button class="minibtn del" data-remove="${esc(r.n)}">✕ ${esc(r.n)}</button>`).join("") + `</div>`;
   }
-  const bl = (state.blocked||[]), bc = (state.blockedCrews||[]);
+  /* only offer to un-remove people/crews who are actually around right now */
+  const liveNames = Object.values(liveRiders).map(r=>crewKey(r.n));
+  const liveCrews = Object.values(liveRiders).map(r=>crewKey(riderCrew(r)));
+  const bl = (state.blocked||[]).filter(k=>liveNames.includes(k));
+  const bc = (state.blockedCrews||[]).filter(k=>liveCrews.includes(k));
   if(bl.length || bc.length){
     h += `<p class="mut" style="margin-top:10px">Removed — tap to allow back:</p><div class="managerow">` +
       bl.map(k=>`<button class="minibtn" data-unremove="${esc(k)}">↩ ${esc(k)}</button>`).join("") +
@@ -1832,6 +1851,8 @@ document.getElementById("crewsavebtn").addEventListener("click", ()=>{
   refreshStats(); renderRace(); renderList(); scheduleSync();
 });
 document.getElementById("crewcard").addEventListener("click", e=>{
+  const sw = e.target.closest("[data-switchcrew]");
+  if(sw){ crewInput.value = sw.dataset.switchcrew; document.getElementById("crewsavebtn").click(); return; }
   const j = e.target.closest("[data-joincrew]");
   if(j){ crewInput.value = j.dataset.joincrew; document.getElementById("crewsavebtn").click(); return; }
   const rm = e.target.closest("[data-remove]");
