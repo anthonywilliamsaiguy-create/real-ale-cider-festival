@@ -542,7 +542,7 @@
 </nav>
 
 <script>
-const BUILD = 25;
+const BUILD = 26;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -1187,7 +1187,7 @@ document.getElementById("newdaybtn").addEventListener("click", e=>{
 /* ================= THE HALF-PINT HANDICAP ================= */
 const RACE_PALETTE = ["#E9A83E","#F5C542","#C94F6D","#8FBF6F","#7FA8D9","#C6D96A","#D4695E","#B57EDC"];
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function cleanName(n){ return (n||"").replace(/[\[\]\|<>&"]/g,"").trim().slice(0,24); }
+function cleanName(n){ return (n||"").replace(/[\[\]\|<>"]/g,"").replace(/\s+/g," ").trim().slice(0,24); }
 function myCrew(){ return cleanName(state.crew) || "Festival"; }
 function riderCrew(r){ return cleanName(r && r.c) || "Festival"; }
 /* crews match on a loose key so "The Lads", "the lads" and "TheLads " are all one crew */
@@ -1282,6 +1282,7 @@ function checkBadges(){
 function renderCrewCard(){
   const now = document.getElementById("crewnow");
   if(!now) return;
+  refreshOthers();
   const inCrew = cleanName(state.crew);
   now.innerHTML = inCrew
     ? `You're in <strong>${esc(myCrew())}</strong>${state.crewOwner?' — you started it, so you can remove people below.':''}`
@@ -1638,6 +1639,7 @@ function ingest(raw){
 
 function afterIngest(changed){
   if(!changed) return;
+  try{ renderCrewCard(); }catch(e){}
   if(welcomeEl && !welcomeEl.hidden) renderCrewPicker();
   renderRace();
   const ae = document.activeElement;
