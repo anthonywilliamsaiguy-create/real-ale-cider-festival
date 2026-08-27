@@ -1,0 +1,1836 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14100C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8D%BA%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+<title>Real Ale &amp; Cider Festival</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bevan&family=Karla:wght@400;500;700;800&display=swap">
+<style>
+  :root{
+    --bg:#14100C;
+    --surface:#211914;
+    --surface2:#2B211A;
+    --line:#3C2F23;
+    --text:#F2E7D5;
+    --muted:#B09C83;
+    --faint:#8A775F;
+    --accent:#E9A83E;
+    --accent-deep:#C77F1F;
+    --accent-ink:#2A1C08;
+    --good:#8FBF6F;
+    --bad:#D4695E;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Karla','Segoe UI',system-ui,-apple-system,sans-serif;
+    font-size:16px;
+    line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:640px;margin:0 auto;padding:0 14px}
+
+  /* ---------- masthead ---------- */
+  .masthead{padding:22px 0 14px;text-align:left}
+  .eyebrow{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;margin:0 0 6px;
+  }
+  h1.title{
+    font-family:'Bevan',Georgia,serif;font-weight:400;
+    font-size:clamp(24px,7vw,36px);line-height:1.08;margin:0;
+    color:var(--accent);text-wrap:balance;
+  }
+  h1.title span{color:var(--text)}
+  .masthead .sub{color:var(--muted);font-size:13px;margin:8px 0 0}
+
+  /* ---------- sticky search/filter bar ---------- */
+  .toolbar{
+    position:sticky;top:0;z-index:20;
+    background:linear-gradient(var(--bg) 82%,rgba(20,16,12,0));
+    padding:10px 0 12px;
+  }
+  .searchrow{display:flex;gap:8px;align-items:center}
+  .search{
+    flex:1;display:flex;align-items:center;gap:8px;
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:9px 14px;
+  }
+  .search svg{flex:none;opacity:.6}
+  .search input{
+    flex:1;min-width:0;background:none;border:none;outline:none;
+    color:var(--text);font:inherit;font-size:15px;
+  }
+  .search input::placeholder{color:var(--faint)}
+  .sortbtn{
+    flex:none;background:var(--surface);border:1px solid var(--line);
+    color:var(--muted);border-radius:999px;padding:9px 13px;
+    font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+  .sortbtn.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+  .chips{
+    display:flex;gap:7px;overflow-x:auto;padding:10px 2px 2px;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  }
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:none;background:var(--surface);border:1px solid var(--line);
+    color:var(--muted);border-radius:999px;padding:6px 13px;
+    font:inherit;font-size:13px;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+  }
+  .chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .chip .dot{width:10px;height:10px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.25)}
+
+  .counts{color:var(--faint);font-size:12px;margin:6px 2px 10px}
+
+  /* ---------- drink cards ---------- */
+  .card{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);margin:0 0 10px;overflow:hidden;
+  }
+  .card.tried{border-color:#5A4526}
+  .cardhead{
+    display:flex;gap:12px;align-items:center;width:100%;
+    padding:12px 14px;background:none;border:none;color:inherit;
+    font:inherit;text-align:left;cursor:pointer;
+  }
+  .cardhead:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;
+  }
+  .glass{flex:none;width:34px;height:44px}
+  .cmain{flex:1;min-width:0}
+  .cname{font-weight:800;font-size:16px;line-height:1.2}
+  .cbrew{color:var(--muted);font-size:13px;margin-top:1px}
+  .tagrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .tag{
+    font-size:11px;font-weight:700;letter-spacing:.04em;
+    color:var(--muted);background:var(--surface2);
+    border-radius:5px;padding:2px 7px;
+  }
+  .tag.abv{color:var(--accent);font-variant-numeric:tabular-nums}
+  .tag.strong{color:#F0B7AE;background:#4A2620}
+  .cright{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .tally{
+    font-size:12px;font-weight:700;color:var(--accent);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .verdict{font-size:15px;line-height:1}
+  .chev{color:var(--faint);transition:transform .18s}
+  .card.open .chev{transform:rotate(180deg)}
+  .cdesc{color:var(--muted);font-size:13.5px;padding:0 14px 12px;margin:0}
+
+  .cbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .22s ease}
+  .card.open .cbody{grid-template-rows:1fr}
+  .cbody>div{overflow:hidden}
+  .controls{border-top:1px dashed var(--line);padding:12px 14px 14px;display:grid;gap:12px}
+  .ctlrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .ctlrow .lbl{font-size:13px;font-weight:700;color:var(--muted)}
+  .stepper{display:flex;align-items:center;gap:2px}
+  .stepper button{
+    width:38px;height:38px;border-radius:10px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--text);font-size:19px;font-weight:700;
+    cursor:pointer;line-height:1;
+  }
+  .stepper .val{
+    min-width:40px;text-align:center;font-weight:800;font-size:17px;
+    font-variant-numeric:tabular-nums;
+  }
+  .thumbs{display:flex;gap:8px}
+  .thumb{
+    border:1px solid var(--line);background:var(--surface2);border-radius:10px;
+    padding:8px 16px;font-size:17px;cursor:pointer;line-height:1;
+  }
+  .thumb.up.on{background:#2E4023;border-color:var(--good)}
+  .thumb.down.on{background:#46231F;border-color:var(--bad)}
+  .notewrap{display:grid;gap:5px}
+  .notewrap label{font-size:13px;font-weight:700;color:var(--muted)}
+  .note{
+    width:100%;background:var(--surface2);border:1px solid var(--line);
+    border-radius:10px;color:var(--text);font:inherit;font-size:14px;
+    padding:9px 11px;resize:vertical;min-height:44px;
+  }
+  .note::placeholder{color:var(--faint)}
+
+  .empty{
+    text-align:center;color:var(--muted);padding:40px 20px;
+    border:1px dashed var(--line);border-radius:var(--radius);
+  }
+  .sectionlabel{
+    font-family:'Bevan',Georgia,serif;font-weight:400;color:var(--text);
+    font-size:15px;letter-spacing:.03em;margin:20px 2px 10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .sectionlabel::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ---------- bottom nav ---------- */
+  .nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    background:#1B1510;border-top:1px solid var(--line);
+    padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+  .navin{max-width:640px;margin:0 auto;display:flex;gap:6px}
+  .navbtn{
+    flex:1;background:none;border:none;border-radius:10px;
+    color:var(--muted);font:inherit;font-size:12px;font-weight:700;
+    padding:7px 4px;cursor:pointer;display:grid;gap:2px;justify-items:center;
+  }
+  .navbtn .ic{font-size:19px;line-height:1}
+  .navbtn.on{color:var(--accent);background:var(--surface)}
+  .navbadge{
+    font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;
+  }
+  .navbtn.on .navbadge{color:var(--accent-deep)}
+
+  /* ---------- my night / info ---------- */
+  .panel{display:none}
+  .panel.on{display:block}
+  .bigstat{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;
+  }
+  .stat{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 8px;text-align:center;
+  }
+  .stat .n{
+    font-family:'Bevan',Georgia,serif;font-size:24px;color:var(--accent);
+    font-variant-numeric:tabular-nums;line-height:1.1;
+  }
+  .stat .l{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
+  .namerow{display:flex;gap:8px;margin:14px 0}
+  .namerow input{
+    flex:1;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);font:inherit;padding:10px 13px;min-width:0;
+  }
+  .namerow input::placeholder{color:var(--faint)}
+  .btn{
+    background:var(--accent);color:var(--accent-ink);border:none;border-radius:10px;
+    font:inherit;font-weight:800;font-size:15px;padding:12px 18px;cursor:pointer;
+  }
+  .btn.ghost{background:var(--surface);color:var(--muted);border:1px solid var(--line);font-weight:700}
+  .btn.danger{background:none;border:1px solid #5C2E28;color:var(--bad)}
+  .btnrow{display:flex;gap:8px;margin:16px 0}
+  .btnrow .btn{flex:1}
+  .logitem{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:11px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;
+  }
+  .logitem .glass{width:26px;height:34px;margin-top:2px}
+  .logmain{flex:1;min-width:0}
+  .logname{font-weight:800;font-size:15px}
+  .logmeta{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+  .lognote{color:var(--text);font-size:13.5px;margin-top:4px;font-style:italic;opacity:.9}
+  .logv{font-size:17px;flex:none}
+  .infocard{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;margin-bottom:12px;
+  }
+  .infocard h3{
+    font-family:'Bevan',Georgia,serif;font-weight:400;font-size:15px;
+    margin:0 0 8px;color:var(--accent);
+  }
+  .infocard p{margin:0 0 8px;font-size:14px;color:var(--text)}
+  .infocard p:last-child{margin-bottom:0}
+  .infocard .mut{color:var(--muted);font-size:13px}
+  .infocard a{color:var(--accent)}
+  .qrbox{display:grid;justify-items:center;gap:8px;padding:6px 0}
+  .qrbox img{width:180px;height:180px;border-radius:10px;background:#fff;padding:8px;max-width:100%}
+
+  /* ---------- name gate (in-flow so it works in every browser) ---------- */
+  .gatecard{
+    background:var(--surface);border:2px solid var(--accent);border-radius:18px;
+    padding:22px 20px;margin:18px 0 6px;display:grid;gap:12px;text-align:center;
+  }
+  .gatecard[hidden]{display:none}
+  .gatecard h2{font-family:'Bevan',Georgia,serif;font-weight:400;color:var(--accent);margin:0;font-size:22px}
+  .gatecard p{color:var(--muted);font-size:14px;margin:0}
+  .gatecard input{
+    background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);font:inherit;font-size:16px;padding:12px 14px;width:100%;text-align:center;
+  }
+  .gatecard input::placeholder{color:var(--faint)}
+  .crewpick{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+  .crewpicklbl{width:100%;color:var(--muted);font-size:12.5px;margin:2px 0}
+  .wskip{background:none;border:none;color:var(--faint);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:4px}
+  .namebanner{
+    display:block;width:100%;background:#4A2620;border:1px solid #6B342C;color:#F0B7AE;
+    border-radius:10px;padding:10px 13px;font:inherit;font-weight:700;font-size:13px;
+    text-align:left;cursor:pointer;margin:12px 0 0;
+  }
+
+  /* ---------- mates' reviews ---------- */
+  .matesline{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-top:6px}
+  .matenotes{display:grid;gap:6px;background:var(--surface2);border-radius:10px;padding:10px 12px}
+  .matenote{font-size:13px;color:var(--muted)}
+  .matenote .mq{color:var(--text);font-style:italic}
+  .prevday{font-size:12.5px;color:var(--faint);font-style:italic}
+
+  /* ---------- sold out ---------- */
+  .tag.sold{color:#E8B0A8;background:#4A2620;letter-spacing:.06em}
+  .card.soldout .cname{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:#8A5A50}
+  .card.soldout .glass,.card.soldout .cbrew,.card.soldout .cdesc{opacity:.45}
+  .minibtn{
+    background:var(--surface2);border:1px solid var(--line);color:var(--muted);
+    border-radius:10px;font:inherit;font-size:13px;font-weight:700;
+    padding:9px 14px;cursor:pointer;
+  }
+  .minibtn.on{color:#E8B0A8;border-color:#5C2E28}
+  .minibtn.del{color:var(--bad);border-color:#5C2E28}
+
+  /* ---------- add-a-drink ---------- */
+  .addcard{
+    border:1px dashed var(--line);border-radius:var(--radius);
+    padding:10px;margin:16px 0 8px;
+  }
+  .addcard.open{background:var(--surface);border-style:solid;padding:14px}
+  .addtitle{font-family:'Bevan',Georgia,serif;font-size:15px;color:var(--accent);margin-bottom:10px}
+  .addgrid{display:grid;gap:8px}
+  .addgrid input,.addgrid select{
+    background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+    color:var(--text);font:inherit;font-size:14px;padding:10px 12px;width:100%;
+  }
+  .addgrid input::placeholder{color:var(--faint)}
+  .addrow2{display:grid;grid-template-columns:1fr 1.6fr;gap:8px}
+
+  /* ---------- the half-pint handicap ---------- */
+  .racehead{margin:16px 0 4px}
+  .racetitle{font-family:'Bevan',Georgia,serif;font-weight:400;font-size:23px;color:var(--accent);margin:0;text-wrap:balance}
+  .racesub{color:var(--muted);font-size:13px;margin:7px 0 0}
+  .racestatus{
+    display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;
+    color:var(--muted);background:var(--surface);border:1px solid var(--line);
+    border-radius:999px;padding:5px 12px;margin:11px 0 0;
+  }
+  .racestatus .dot2{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
+  .racestatus.live{color:var(--good)}
+  .racestatus.live .dot2{background:var(--good)}
+  .lane{margin:15px 0}
+  .lanetop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .rname{font-weight:800;font-size:14.5px}
+  .rname .you{color:var(--faint);font-weight:700;font-size:12px}
+  .rstat{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+  .lanetrack{
+    position:relative;height:44px;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  }
+  .lanetrack .ticks{
+    position:absolute;inset:0;opacity:.45;
+    background:repeating-linear-gradient(90deg,transparent 0,transparent 35px,var(--line) 35px,var(--line) 36px);
+  }
+  .runner{position:absolute;top:5px;transition:left .8s cubic-bezier(.25,.9,.4,1.15);line-height:0}
+  .flagpost{position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:15px;opacity:.9}
+  .commentary{
+    color:var(--text);font-size:14px;font-style:italic;
+    background:var(--surface2);border:1px dashed var(--line);border-radius:10px;
+    padding:10px 14px;margin:16px 0 12px;
+  }
+  .standing{
+    display:flex;align-items:center;gap:11px;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:10px 13px;margin-bottom:7px;
+  }
+  .standing .pos{font-family:'Bevan',Georgia,serif;font-size:15px;color:var(--accent);min-width:30px;text-align:center}
+  .standing .smain{flex:1;min-width:0}
+  .standing .sname{font-weight:800;font-size:14.5px}
+  .standing .smeta{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+  code{background:var(--surface2);border-radius:4px;padding:1px 5px;font-size:12px}
+
+  .notesaved{color:var(--good);font-weight:700;font-size:11.5px;margin-left:6px}
+  .donebtn{width:100%;padding:10px 14px;font-size:14px}
+  .card.flash{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);transition:box-shadow .3s,border-color .3s}
+
+  /* ---------- trophies, toasts, best in show ---------- */
+  .sbadges{font-size:13px;letter-spacing:1px;font-weight:400}
+  .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+  .trophy{
+    background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 8px;display:grid;gap:3px;justify-items:center;text-align:center;
+    opacity:.45;
+  }
+  .trophy.won{opacity:1;border-color:#6B5426;background:#302416}
+  .trophy .te{font-size:22px;line-height:1}
+  .trophy .tn{font-weight:800;font-size:11.5px}
+  .trophy .th{color:var(--faint);font-size:10.5px;line-height:1.25}
+  .trophy.won .th{color:var(--accent-deep)}
+  .toasts{
+    position:fixed;left:0;right:0;bottom:calc(86px + env(safe-area-inset-bottom));
+    z-index:60;display:grid;gap:8px;justify-items:center;pointer-events:none;padding:0 16px;
+  }
+  .toast{
+    background:#2E4023;border:1px solid var(--good);color:#DFF0D2;
+    font-weight:800;font-size:14px;border-radius:999px;padding:10px 18px;
+    box-shadow:0 6px 22px rgba(0,0,0,.55);animation:toastin .35s ease;max-width:100%;
+  }
+  @keyframes toastin{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  .showcard{
+    background:var(--surface);border:1px solid #6B5426;border-radius:var(--radius);
+    padding:13px 15px;margin-top:12px;display:grid;gap:8px;
+  }
+  .showrow{font-size:14px;line-height:1.4}
+  .showmut{color:var(--muted);font-size:12.5px}
+  @media (prefers-reduced-motion:reduce){ .toast{animation:none} }
+
+  @media (prefers-reduced-motion:reduce){
+    .cbody,.chev,.runner{transition:none}
+  }
+</style>
+
+<div class="wrap">
+  <div class="gatecard" id="welcome" hidden>
+    <h2>Who's drinking? 🍻</h2>
+    <p>Pop your name in first — it's how your pints, ratings and notes show up on your mates' phones, and how your glass joins the race.</p>
+    <input id="wname" type="text" placeholder="Your name, e.g. Tony" maxlength="24" autocomplete="off">
+    <div class="crewpick" id="crewpick"></div>
+    <input id="wcrew" type="text" placeholder="Crew name" maxlength="24" autocomplete="off" list="crewlist">
+    <datalist id="crewlist"></datalist>
+    <button class="btn" id="wgo">Let's go</button>
+    <button class="wskip" id="wskip">Skip for now</button>
+  </div>
+  <header class="masthead">
+    <p class="eyebrow">29th · Clacton-on-Sea</p>
+    <h1 class="title">REAL ALE &amp; <span>CIDER</span> FESTIVAL</h1>
+    <p class="sub">St James' Hall · Wed 26 – Sat 29 Aug · 32 ciders &amp; perries, 54 cask ales</p>
+  </header>
+
+  <!-- ============ MENU PANEL ============ -->
+  <section id="panel-menu" class="panel on">
+    <button class="namebanner" id="namebanner" hidden>⚠ No name set — your drinks won't show on your mates' phones. Tap to sort it.</button>
+    <div class="toolbar">
+      <div class="searchrow">
+        <div class="search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Search beer, brewery, number…" autocomplete="off">
+        </div>
+        <button id="sortbtn" class="sortbtn" title="Change sort order">No. ↑</button>
+        <button id="dicebtn" class="sortbtn" title="Pick me something I haven't tried">🎲</button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <p class="counts" id="counts"></p>
+    <div id="list"></div>
+  </section>
+
+  <!-- ============ RACE PANEL ============ -->
+  <section id="panel-race" class="panel">
+    <div class="racehead">
+      <h2 class="racetitle">The Half-Pint Handicap</h2>
+      <p class="racesub">Every half pint moves your glass one furlong, left to right, towards the flag. The board runs all night — it only resets when you tap <em>New day</em>. Friendly rivalry only; it's a marathon, not a sprint. 🐎</p>
+      <p class="racestatus" id="racestatus"><span class="dot2"></span>Checking for live connection…</p>
+      <div class="chips" id="crewchips" style="margin-top:10px" hidden></div>
+    </div>
+    <div id="joinbox" class="infocard" style="margin-top:14px" hidden>
+      <h3>Saddle up</h3>
+      <p class="mut">Give yourself a racing name and your glass joins the field.</p>
+      <div class="namerow" style="margin:8px 0 0">
+        <input id="racename" type="text" placeholder="Your name, e.g. Tony" maxlength="24">
+      </div>
+    </div>
+    <div id="track"></div>
+    <div id="standings"></div>
+    <div class="infocard" style="margin-top:16px">
+      <h3>Add your mates to your race</h3>
+      <p class="mut">Everyone swaps tallies through the group chat — it takes two taps and works with no signal at all:</p>
+      <p class="mut"><strong>1.</strong> You tap <em>Share my tally</em> (My Night tab) and send it to the chat.<br>
+      <strong>2.</strong> When a mate sends theirs, come here and tap <em>Paste from chat</em>.</p>
+      <div class="btnrow" style="margin:10px 0 0">
+        <button class="btn" id="pastebtn">📋 Paste from chat</button>
+      </div>
+      <p class="mut" style="margin-top:10px">Or paste it in by hand:</p>
+      <div class="namerow" style="margin:6px 0 0">
+        <input id="importbox" type="text" placeholder="Paste a shared tally here">
+        <button class="btn ghost" id="importbtn">Add</button>
+      </div>
+      <p class="mut" id="importmsg"></p>
+    </div>
+  </section>
+
+  <!-- ============ MY NIGHT PANEL ============ -->
+  <section id="panel-night" class="panel">
+    <div class="namerow">
+      <input id="myname" type="text" placeholder="Your name (for the shared tally)" maxlength="24">
+      <input id="mycrew" type="text" placeholder="Crew (optional)" maxlength="24" list="crewlist" style="flex:.8">
+    </div>
+    <div class="bigstat">
+      <div class="stat"><div class="n" id="st-drinks">0</div><div class="l">Drinks today</div></div>
+      <div class="stat"><div class="n" id="st-pints">0</div><div class="l">Pints today</div></div>
+      <div class="stat"><div class="n" id="st-units">0</div><div class="l">Units today</div></div>
+    </div>
+    <p class="counts" style="margin-top:-4px">Tallies keep running (even past midnight) until you tap New day — ratings and notes always carry over.</p>
+    <p class="counts" id="triedline" style="margin-top:-6px"></p>
+    <div class="btnrow">
+      <button id="sharebtn" class="btn">Share my tally</button>
+      <button id="newdaybtn" class="btn ghost">🌅 New day</button>
+    </div>
+    <div id="log"></div>
+    <div class="infocard" style="margin-top:16px">
+      <h3>Trophy Cabinet</h3>
+      <div class="tgrid" id="tgrid"></div>
+    </div>
+    <div class="btnrow">
+      <button id="resetbtn" class="btn danger">Clear everything</button>
+    </div>
+  </section>
+
+  <!-- ============ INFO PANEL ============ -->
+  <section id="panel-info" class="panel">
+    <div class="infocard">
+      <h3>The essentials</h3>
+      <p><strong>St James' Hall</strong>, Tower Road, Clacton-on-Sea, CO15 1LE</p>
+      <p>Wed 26 Aug: 18:00–22:00<br>Thu 27 – Sat 29 Aug: 11:00–22:00</p>
+      <p>Entry <strong>£3</strong> · free for card-carrying CAMRA members</p>
+      <p class="mut">Free soft drinks for designated drivers. 🚗</p>
+    </div>
+    <div class="infocard" id="qrcard">
+      <h3>Get it on a mate's phone</h3>
+      <div class="qrbox">
+        <img id="qrimg" alt="QR code for this app">
+        <p class="mut" id="applink" style="word-break:break-all"></p>
+        <button class="btn ghost" id="copylinkbtn">🔗 Copy link</button>
+        <p class="mut">Scan the code, or send them the link — they just open it. No sign-in, no app store.</p>
+      </div>
+    </div>
+    <div class="infocard">
+      <h3>How this works</h3>
+      <p class="mut">Tap any drink to log halves and pints, give it a 👍 or 👎, and jot a note. Everything saves to <strong>your own phone</strong> automatically — no signal needed once the page has loaded. Use <em>Share my tally</em> to send your list to the group chat.</p>
+      <p class="mut">Numbers match the festival programme, so just tell the bar the number. If a cask runs dry, open the drink and <em>Mark sold out</em> — then use the <em>Hide sold out</em> chip to sweep them away. Found something that's not listed? Add it yourself at the bottom of the menu.</p>
+      <p class="mut">The <strong>Race</strong> tab is the Half-Pint Handicap: every half pint is a furlong. Nothing resets at midnight — drink till 1am if you like; the board only starts fresh when someone taps <em>New day</em> on their own phone (My Night tab).</p>
+      <p class="mut"><strong>Getting everyone on the board:</strong> each phone keeps its own list, and you swap them through the group chat. Tap <em>Share my tally</em> and send it; when someone else sends theirs, open the Race tab and tap <em>📋 Paste from chat</em>. Their glass, ratings and notes all land at once. Do it whenever you fancy a look at the standings — a couple of swaps a session is plenty, and it works with no signal.</p>
+      <p class="mut">There's a <strong>Trophy Cabinet</strong> too (My Night tab): trophies unlock as you explore — perries, stouts, counties, tasting notes, going the distance — and show next to your name on the race. The crew's 👍s crown a <strong>Best in Show</strong> on the Race tab, and the biggest stinker gets named and shamed.</p>
+      <p class="mut"><strong>Crews:</strong> met another group who want in? They scan the QR, enter their name and a crew name of their own — they get their own race and your board stays yours. A crew switcher appears on the Race tab, with an <em>All crews</em> view that scores crew against crew. <strong>To join a crew that already exists:</strong> Race tab → tap that crew's name → tap <em>🤝 Join</em>. Spelling doesn't matter — "The Lads" and "the lads" count as the same crew, and the crew box suggests existing names as you type. Notes and Best in Show stay within your own crew.</p>
+    </div>
+    <div class="infocard">
+      <h3>Small print</h3>
+      <p class="mut">List taken from the official festival lists (revised 20 &amp; 26 Aug). The organisers warn it's subject to change and not everything is on at once — treat it as a guide. Style groupings are our best guess from the descriptions. Units are approximate (half = 284 ml, pint = 568 ml).</p>
+      <p class="mut">Source: <a href="https://tendring.camra.org.uk/clacton-on-sea-real-ale-cider-festival/" target="_blank" rel="noopener">tendring.camra.org.uk</a></p>
+    </div>
+  </section>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<nav class="nav">
+  <div class="navin">
+    <button class="navbtn on" data-panel="menu"><span class="ic">🍺</span>Menu<span class="navbadge" id="nb-menu">86 drinks</span></button>
+    <button class="navbtn" data-panel="race"><span class="ic">🏇</span>Race<span class="navbadge" id="nb-race">no runners</span></button>
+    <button class="navbtn" data-panel="night"><span class="ic">📝</span>My Night<span class="navbadge" id="nb-night">nothing yet</span></button>
+    <button class="navbtn" data-panel="info"><span class="ic">ℹ️</span>Info<span class="navbadge">&nbsp;</span></button>
+  </div>
+</nav>
+
+<script>
+const BUILD = 20;
+
+/* ================= DATA ================= */
+/* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
+const CAT = {
+  cider: {label:"Cider",           col:"#D9C755"},
+  perry: {label:"Perry",           col:"#C6D96A"},
+  fruit: {label:"Fruit Cider",     col:"#C94F6D"},
+  golden:{label:"Golden & Blonde", col:"#F5C542"},
+  pale:  {label:"Pale & Hoppy",    col:"#EDD98F"},
+  ipa:   {label:"IPA",             col:"#E8A33D"},
+  bitter:{label:"Bitter & Amber",  col:"#B5651D"},
+  mild:  {label:"Mild",            col:"#5C3A21"},
+  stout: {label:"Stout & Porter",  col:"#241812"},
+  other: {label:"Other / Wine",    col:"#B57EDC"},
+};
+const DRY = {S:"Sweet","M":"Medium",D:"Dry","M/D":"Med-Dry","M/S":"Med-Sweet"};
+
+const ALES = [
+["1","Abbeydale","Four Yorkshiremen",4.1,"pale","Pale Ale","Tropical body with light bitter finish"],
+["2","Black Box","Landing Gear",3.8,"bitter","Session Bitter","Session bitter"],
+["3","Black Box","Vulcan Gold",4.0,"golden","Golden Ale","Classic golden ale, crisp and refreshing"],
+["4","Brentwood","Brentwood Legacy",4.0,"pale","Pale Ale","Easy drinking pale with citrus notes"],
+["5","Brentwood","Marvellous Maple Mild",3.7,"mild","Mild","Dark brown mild with a hint of maple syrup"],
+["6","Buntingford","Oatmeal Stout",4.4,"stout","Stout","A stout to shout about"],
+["7","Chelmsford","Cool Bay",3.9,"ipa","Session IPA","Hoppy, zesty, juicy, sessionable IPA"],
+["8","Cliff Quay","Tolly Roger",4.2,"golden","Summer Ale","Well-balanced summer beer"],
+["9","Cliff Quay","Tumble Home",4.7,"bitter","Red Ale","Red ale with fruity aroma","#8E3B2F"],
+["10","Colchester","Hyperbole",4.4,"pale","Pale Ale","Nice and hoppy"],
+["11","Colchester","Raven",4.3,"stout","Porter","Deliciously dark porter"],
+["12","Crouch Vale","Blackwater Mild",3.7,"mild","Dark Mild","Smooth drinkable dark mild"],
+["13","Crouch Vale","Brewers Gold",4.0,"golden","Golden Ale","Supreme Champion Beer of Britain 2005 & 2006"],
+["14","Drinkstone","Bitter",3.8,"bitter","Session Bitter","Award winning session ale"],
+["15","Earl Soham","Brandeston Gold",4.5,"golden","Golden Ale","Popular beer with sharp clean flavour"],
+["16","Earl Soham","Gannet",3.3,"mild","Mild","Balanced mild with sweet fruity flavour"],
+["17","Elmtree","Burston's Cuckoo",3.8,"golden","Blonde Ale","A blonde ale with a tantalising hint of citrus"],
+["18","Elmtree","Dark Horse",5.0,"stout","Stout","Smooth stout"],
+["19","Facer's","Abbey Blonde",4.0,"golden","Blonde Ale","A blonde beer with a grapefruit hop aroma & palate"],
+["20","Facer's","Mountain Mild",3.3,"mild","Dark Mild","Fruity dark mild"],
+["21","Facer's","This Splendid Ale",4.3,"golden","Golden Ale","Golden yellow colour with rich smooth full fruity palate"],
+["22","Front Row","Arise Sir Kevin",4.3,"pale","Pale Ale","A pale ale brewed in tribute to Kevin Sinfield"],
+["23","Front Row","Hooker",4.5,"stout","Speciality Stout","Chocolate & salted caramel stout"],
+["24","George's","East Coast IPA",4.5,"ipa","IPA","Try East vs West. Same malt & hops, different yeast"],
+["25","George's","West Coast IPA",4.5,"ipa","IPA","Try West vs East. Same malt & hops, different yeast"],
+["26","Grain","Best Bitter",4.2,"bitter","Best Bitter","Well balanced complex bitter"],
+["27","Grain","Three One Six",3.9,"pale","Extra Pale","Extra pale, dry, with a grapefruit hop aroma"],
+["28","Green Jack","Baltic Trader",10.5,"stout","Imperial Stout","Extra strong export stout from the wood"],
+["29","Green Jack","Little Green Men 1",4.2,"pale","Pale Ale","Refreshing pale ale"],
+["30","Green Jack","Nightingale",4.0,"bitter","Amber Bitter","Beautifully balanced sweet & malty amber bitter"],
+["31","Gruff","Home Run",4.4,"pale","Hazy Pale","Hazy tropical pale ale"],
+["32","Gruff","P2 Porter",5.4,"stout","Porter","Strong dark porter"],
+["33","Gun","Chummy Bluster",4.4,"bitter","Best Bitter","A delicious Sussex best bitter"],
+["34","Gun","Parabellum",4.1,"stout","Milk Stout","Dark and delicious, a rich jet black milk stout"],
+["35","Hop Back","Entire Stout",4.5,"stout","Stout","Full dark stout"],
+["36","Hop Back","GFB",3.4,"golden","Golden Ale","Golden session ale"],
+["37","Hop Back","Summer Lightning",5.0,"golden","Golden Ale","Straw-coloured beer with an intense bitterness"],
+["38","Humpty Dumpty","Four Spot Chaser",4.0,"bitter","Amber Ale","Crisp pale amber ale with a refreshing tang"],
+["39","Humpty Dumpty","Little Sharpie",3.8,"golden","Golden Ale","A delicate hop aroma and a light clean taste"],
+["40","JackRabbit","Bitter Sweet Symphony",3.8,"bitter","English Bitter","English bitter"],
+["41","JackRabbit","Roasted",4.3,"stout","Stout","A black stout with the characteristics of a porter"],
+["42","Leigh on Sea","Kursaal Gold",3.9,"golden","Golden Ale","Golden with fresh zest aroma & clean sweet flavours"],
+["43","Leigh on Sea","Legra Pale",3.8,"golden","Light Golden Ale","A light golden ale"],
+["44","Long Man","Long Blonde",3.8,"golden","Blonde Ale","Golden session ale"],
+["45","Long Man","Oatmeal Stout",4.4,"stout","Oatmeal Stout","Oatmeal stout"],
+["46","Long Man","Old Man",4.3,"mild","Dark Mild","Dark mild"],
+["47","Milton","Orion",3.4,"bitter","Session Bitter","Session bitter"],
+["48","S&P","Beano Stout",4.5,"stout","Stout","Stout"],
+["49","S&P","Dennis",4.2,"bitter","Session Bitter","Full bodied session bitter"],
+["50","S&P","NASHA IPA",5.0,"ipa","Amber IPA","Rich amber IPA with a malty sweetness"],
+["51","Wharf","Filbert",3.8,"bitter","Festival Special","Don't be a dummy! Try Filbert, brewed for the festival"],
+["52","Wharf","Polly on the Shore",3.4,"golden","Golden Ale","Gold"],
+["53","Wharf","Redoubt Stout",4.2,"stout","Session Stout","Session stout"],
+["54","Wibblers","Dengie Dark",3.8,"mild","Dark Mild","Dark mild"],
+];
+
+const CIDERS = [
+["C1","Bottle Kicking Cider","Scrummage",6.5,"cider","D","Clear, golden-yellow colour with a crisp sharp finish","Leicestershire"],
+["C4","Dorset Nectar","Dabinett",5.0,"cider","M/D","A single orchard cider using Dabinett bittersweet apples","Dorset"],
+["C5","Dudda's Tun","Sweet Apple",5.5,"cider","S","Fresh picked apple flavour with soft honey notes","Kent"],
+["C7","Giggler Cider","Orchard",6.6,"cider","D","Dry, rich, slightly sharp first taste with a fruity finish","Norfolk"],
+["C8","Giggler Cider","Sweet Caroline",5.0,"cider","M/D","Light apple juice aromas with a soft fruity finish","Norfolk"],
+["C10","Hunts","Bull Walloper",7.2,"cider","M/S","Medium sweet rich traditional cider","Devon"],
+["C11","Norfolk Raider","Honey Belle",4.0,"cider","S","Sweet finish and beautiful honey colour","Norfolk"],
+["C13","Norfolk Raider","Wingman Cider",6.2,"cider","M","Overtones of Bramley, traditional still cider","Norfolk"],
+["C16","Pulp","Traditional Dry Apple",6.0,"cider","D","With crisp, clean apple flavours and a touch of tartness","Herefordshire"],
+["C17","Sam's Cider","Cloudy Crush",4.5,"cider","M/S","Fresh, palate-pleasing naturally cloudy cider","Devon"],
+["C18","Sandford Orchards","Devon Scrumpy",6.0,"cider","M","Still and cloudy, full-bodied cider","Devon"],
+["C22","Snails Bank","Dry Another Way",6.0,"cider","D","Ultra crisp full bodied dry cider","Herefordshire"],
+["C29","Ventons","Skippy's Scrumpy",6.5,"cider","D","Straw pressed with vintage Devon apples","Devon"],
+["C30","Village Green Cider","Medium Soul Cider",5.7,"cider","M/S","Crafted using a variety of apples","Sussex"],
+["C31","Village Green Cider","Oak Staged Cider",6.8,"cider","M","Matured in vintage oak cask, woody undertones","Sussex"],
+["C32","Westons","Old Rosie",6.8,"cider","M/D","Cloudy traditional cider with a crisp finish","Herefordshire"],
+["C2","Broadoak","Perry",7.5,"perry","S","Refreshing pear flavour and aroma","Bristol"],
+["C6","Farmer Jims","Farmyard Perry",4.5,"perry","S","A light fruity perry","Devon"],
+["C9","Gwatkin","Squeal Pig Perry",4.5,"perry","M","Pale straw colour and a sweet citrus aroma","Herefordshire"],
+["C12","Norfolk Raider","Perry Winkle",4.0,"perry","S","Bold citrus zingy flavours","Norfolk"],
+["C3","Celtic Marches","Sugar Plum",3.4,"fruit","S","Hint of berries, lightly spiced, with a rich purple hue","Herefordshire"],
+["C14","Pulp","Berry Lime Blitz",3.4,"fruit","S","Rich black raspberry, zesty lime, and a hint of vodka","Herefordshire"],
+["C15","Pulp","Singapore Sling",3.4,"fruit","S","Pineapple, gin, cherry brandy and lime juice","Herefordshire"],
+["C19","Seacider","Passion Fruit",4.0,"fruit","M","Made with the pure juice of passion fruit","Sussex"],
+["C20","Snails Bank","Apple & Ginger",4.0,"fruit","S","A clear cider with ground root ginger for a fiery kick!","Herefordshire"],
+["C21","Snails Bank","Chilli Jamin'",4.0,"fruit","S","Blended with strawberries and a chilli blast","Herefordshire"],
+["C23","Snails Bank","Fruit Bat",4.0,"fruit","M","Blended with strawberry, raspberry and blackcurrant","Herefordshire"],
+["C24","Snails Bank","Mango",4.0,"fruit","M","Blended with luscious mango","Herefordshire"],
+["C25","Snails Bank","Peach Melba",4.0,"fruit","S","Juicy peach cider rippled with sharp raspberry","Herefordshire"],
+["C26","Snails Bank","Raspberry Ripple",4.0,"fruit","S","Infused with tart raspberry rippled with vanilla","Herefordshire"],
+["C27","Snails Bank","Rhubarb",4.0,"fruit","S","Cider infused with rhubarb and blended with vanilla","Herefordshire"],
+["C28","Snails Bank","Spiced Rum",4.0,"fruit","S","Rum barrel aged, spiced with cinnamon and allspice","Herefordshire"],
+];
+
+const BASE_DRINKS = [
+  ...CIDERS.map(c=>({id:c[0], no:c[0], brew:c[1], name:c[2], abv:c[3], cat:c[4], dry:c[5], desc:c[6], county:c[7], style:CAT[c[4]].label, kind:"cider"})),
+  ...ALES.map(a=>({id:"A"+a[0], no:a[0], brew:a[1], name:a[2], abv:a[3], cat:a[4], style:a[5], desc:a[6], col:a[7]||null, kind:"ale"})),
+];
+let DRINKS = [], byId = {};
+function rebuildDrinks(){
+  DRINKS = [...BASE_DRINKS, ...(state.custom||[])];
+  byId = Object.fromEntries(DRINKS.map(d=>[d.id,d]));
+}
+
+/* ================= STATE ================= */
+const KEY = "clacton-ale-trail-2026";
+let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:""};
+try{ const raw = localStorage.getItem(KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
+/* The "day" only rolls over when someone taps New Day — no automatic midnight reset. */
+if(!state.sessionDay){
+  const seen = Object.values(state.drinks||{}).flatMap(e=>Object.keys(e.days||{})).sort();
+  state.sessionDay = seen.length ? seen[seen.length-1] : new Date().toLocaleDateString("en-CA");
+}
+function sessionKey(){ return state.sessionDay; }
+function dayDate(d){ return String(d||"").split(".")[0]; }
+function startNewDay(){
+  const base = new Date().toLocaleDateString("en-CA");
+  const used = new Set(Object.values(state.drinks||{}).flatMap(e=>Object.keys(e.days||{})));
+  used.add(state.sessionDay);
+  let k = base, i = 2;
+  while(used.has(k)) k = base + "." + (i++);
+  state.sessionDay = k;
+  state.lastDrink = null;
+  state.seenBadges = (state.seenBadges||[]).filter(x=>x!=="stayer"); // The Stayer can be re-earned each day
+  save();
+  refreshStats(); renderList(); renderRace(); updateRaceStatus(); scheduleSync();
+}
+/* migrate v1 entries ({h,p,r,note}) to day-keyed tallies ({r,note,days}) */
+for(const e of Object.values(state.drinks||{})){
+  if(e && !e.days){ e.days = {}; if(e.h||e.p) e.days[sessionKey()] = {h:e.h||0, p:e.p||0}; }
+  if(e){ delete e.h; delete e.p; }
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  try{ refreshNameUi(); }catch(e){}
+}
+function entry(id){ return state.drinks[id] || {r:0, note:"", days:{}}; }
+function tEntry(id){ const e = entry(id); return (e.days && e.days[sessionKey()]) || {h:0, p:0}; }
+function hasAnyCount(e){ return Object.values(e.days||{}).some(c=>(c.h||0)||(c.p||0)); }
+function otherDayHalves(id){
+  const e = entry(id); let n = 0;
+  for(const [d,c] of Object.entries(e.days||{})) if(d!==sessionKey()) n += (c.h||0)+(c.p||0)*2;
+  return n;
+}
+function setEntry(id, e){
+  const days = {};
+  for(const [d,c] of Object.entries(e.days||{})) if((c.h||0)||(c.p||0)) days[d] = c;
+  e.days = days;
+  if(!hasAnyCount(e) && !e.r && !e.note) delete state.drinks[id];
+  else state.drinks[id] = e;
+  save();
+}
+
+let filterCat = "all";
+let triedOnly = false;
+let hideSold = false;
+let sortMode = 0; // 0 = list order, 1 = ABV asc, 2 = ABV desc
+let query = "";
+let addFormOpen = false;
+let currentTab = "menu";
+const openIds = new Set();
+
+/* ================= ICONS ================= */
+function glassSVG(d){
+  const col = d.col || CAT[d.cat].col;
+  if(d.cat === "perry"){
+    return `<svg class="glass" viewBox="0 0 34 44" aria-hidden="true"><path d="M17 8 C13 14 8 18 8 28 a9 9 0 0 0 18 0 C26 18 21 14 17 8Z" fill="${col}" stroke="#00000033"/><path d="M17 8 C17 5 19 3 22 2" fill="none" stroke="#7A5A34" stroke-width="2" stroke-linecap="round"/><ellipse cx="14" cy="26" rx="3" ry="4" fill="#ffffff2e"/></svg>`;
+  }
+  if(d.cat === "fruit"){
+    return `<svg class="glass" viewBox="0 0 34 44" aria-hidden="true"><circle cx="12" cy="26" r="8" fill="${col}" stroke="#00000033"/><circle cx="22" cy="22" r="8" fill="${col}" stroke="#00000033" opacity=".85"/><circle cx="18" cy="32" r="8" fill="${col}" stroke="#00000033" opacity=".9"/><path d="M17 14 C17 9 19 6 23 5" fill="none" stroke="#4C7A3A" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  if(d.cat === "cider"){
+    return `<svg class="glass" viewBox="0 0 34 44" aria-hidden="true"><path d="M17 10 C10 10 6 16 6 24 c0 8 5 14 11 14 s11-6 11-14 c0-8-4-14-11-14Z" fill="${col}" stroke="#00000033"/><path d="M17 10 C17 6 19 4 22 3" fill="none" stroke="#4C7A3A" stroke-width="2" stroke-linecap="round"/><path d="M22 6 c4-2 7 0 7 3 -4 1 -7 0 -7-3Z" fill="#7FA84E"/><ellipse cx="13" cy="22" rx="3" ry="5" fill="#ffffff30"/></svg>`;
+  }
+  if(d.cat === "other"){
+    return `<svg class="glass" viewBox="0 0 34 44" aria-hidden="true"><path d="M9 4 h16 c0 10-3.5 15-8 15 s-8-5-8-15Z" fill="${col}" stroke="#00000033"/><path d="M17 19 v16" stroke="#B8A88F" stroke-width="2.4" stroke-linecap="round"/><path d="M10 40 h14" stroke="#B8A88F" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="13.5" cy="9" rx="2" ry="3.5" fill="#ffffff36"/></svg>`;
+  }
+  return `<svg class="glass" viewBox="0 0 34 44" aria-hidden="true"><path d="M8 10 L10.5 41 a2 2 0 0 0 2 1.8 h9 a2 2 0 0 0 2-1.8 L26 10Z" fill="${col}" stroke="#00000040"/><path d="M7.4 4 h19.2 l-.5 7 H7.9Z" fill="#F6EFDF"/><circle cx="11" cy="6.5" r="2.4" fill="#FDF8EC"/><circle cx="17" cy="5.5" r="2.8" fill="#FDF8EC"/><circle cx="23" cy="6.5" r="2.4" fill="#FDF8EC"/><path d="M12.6 15 l1 22" stroke="#ffffff2b" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>`;
+}
+
+/* ================= MENU RENDER ================= */
+const chipsEl = document.getElementById("chips");
+const listEl = document.getElementById("list");
+const countsEl = document.getElementById("counts");
+
+function buildChips(){
+  const mk = (id, label, dot) =>
+    `<button class="chip${filterCat===id&&!triedOnly?" on":""}" data-cat="${id}">${dot?`<span class="dot" style="background:${dot}"></span>`:""}${label}</button>`;
+  let h = mk("all","All");
+  for(const k of ["cider","perry","fruit","golden","pale","ipa","bitter","mild","stout","other"])
+    h += mk(k, CAT[k].label, CAT[k].col);
+  h += `<button class="chip${triedOnly?" on":""}" data-cat="__tried">✓ Tried</button>`;
+  h += `<button class="chip${hideSold?" on":""}" data-cat="__hidesold">Hide sold out</button>`;
+  chipsEl.innerHTML = h;
+}
+chipsEl.addEventListener("click", e=>{
+  const b = e.target.closest(".chip"); if(!b) return;
+  const c = b.dataset.cat;
+  if(c === "__tried"){ triedOnly = !triedOnly; }
+  else if(c === "__hidesold"){ hideSold = !hideSold; }
+  else { filterCat = c; triedOnly = false; }
+  buildChips(); renderList();
+});
+
+document.getElementById("q").addEventListener("input", e=>{
+  query = e.target.value.trim().toLowerCase(); renderList();
+});
+document.getElementById("dicebtn").addEventListener("click", ()=>{
+  const pool = visibleDrinks().filter(d=>!state.soldOut[d.id] && !hasAnyCount(entry(d.id)));
+  if(!pool.length){ showToast("🎲 Nothing left untried in this view — you've done the lot!"); return; }
+  const d = pool[Math.floor(Math.random()*pool.length)];
+  openIds.add(d.id);
+  renderList();
+  const card = document.getElementById("card-"+d.id);
+  if(card){
+    card.scrollIntoView({behavior:"smooth", block:"center"});
+    card.classList.add("flash");
+    setTimeout(()=>card.classList.remove("flash"), 2600);
+  }
+  showToast(`🎲 The dice says: ${d.no}. ${d.name} (${d.abv.toFixed(1)}%)`);
+});
+
+const sortLabels = ["No. ↑","ABV ↑","ABV ↓"];
+document.getElementById("sortbtn").addEventListener("click", ()=>{
+  sortMode = (sortMode+1)%3;
+  const b = document.getElementById("sortbtn");
+  b.textContent = sortLabels[sortMode];
+  b.classList.toggle("on", sortMode!==0);
+  renderList();
+});
+
+function visibleDrinks(){
+  let out = DRINKS.filter(d=>{
+    if(hideSold && state.soldOut[d.id]) return false;
+    if(triedOnly){ const e = entry(d.id); if(!hasAnyCount(e) && !e.r && !e.note) return false; }
+    else if(filterCat!=="all" && d.cat!==filterCat) return false;
+    if(query){
+      const hay = (d.no+" "+d.brew+" "+d.name+" "+d.style+" "+(d.desc||"")+" "+(d.county||"")).toLowerCase();
+      if(!hay.includes(query)) return false;
+    }
+    return true;
+  });
+  if(sortMode===1) out = out.slice().sort((a,b)=>a.abv-b.abv);
+  if(sortMode===2) out = out.slice().sort((a,b)=>b.abv-a.abv);
+  return out;
+}
+
+function tallyText(e){
+  const bits=[];
+  if(e.h) bits.push("½×"+e.h);
+  if(e.p) bits.push("🍺×"+e.p);
+  return bits.join(" ");
+}
+
+function mateReviewsFor(id){
+  const out = [];
+  const crew = myCrewKey();
+  for(const [k,r] of Object.entries(othersCache)){
+    if(crewKey(riderCrew(r)) !== crew) continue;
+    const rv = r.reviews && r.reviews[id];
+    if(rv && (rv.r || rv.note)) out.push({n: r.n||k, r:rv.r||0, note:rv.note||""});
+  }
+  return out;
+}
+
+function cardHTML(d){
+  const e = entry(d.id);
+  const t = tEntry(d.id);
+  const tried = !!(hasAnyCount(e)||e.r||e.note);
+  const open = openIds.has(d.id);
+  const sold = !!state.soldOut[d.id];
+  const mates = mateReviewsFor(d.id);
+  const tags = [`<span class="tag abv">${d.abv.toFixed(1)}%</span>`,`<span class="tag">${d.style}</span>`];
+  if(sold) tags.unshift(`<span class="tag sold">SOLD OUT</span>`);
+  if(d.dry) tags.push(`<span class="tag">${DRY[d.dry]||d.dry}</span>`);
+  if(d.county) tags.push(`<span class="tag">${d.county}</span>`);
+  if(d.abv>=6) tags.push(`<span class="tag strong">⚠ strong</span>`);
+  return `<article class="card${tried?" tried":""}${open?" open":""}${sold?" soldout":""}" id="card-${d.id}">
+    <button class="cardhead" data-id="${d.id}" aria-expanded="${open}">
+      ${glassSVG(d)}
+      <span class="cmain">
+        <span class="cname">${d.no}. ${d.name}</span>
+        <span class="cbrew" style="display:block">${d.brew}</span>
+        <span class="tagrow">${tags.join("")}</span>
+        ${mates.length?`<span class="matesline">${mates.slice(0,3).map(m=>`<span style="color:${nameColor(m.n)}">${esc(m.n)}</span>${m.r===1?" 👍":m.r===-1?" 👎":" 💬"}`).join(" · ")}${mates.length>3?` · +${mates.length-3} more`:""}</span>`:""}
+      </span>
+      <span class="cright">
+        <span class="verdict" data-role="verdict">${e.r===1?"👍":e.r===-1?"👎":""}</span>
+        <span class="tally" data-role="tally">${tallyText(t)}</span>
+        <span class="chev">▾</span>
+      </span>
+    </button>
+    <p class="cdesc">${d.desc}</p>
+    <div class="cbody"><div>
+      <div class="controls">
+        ${mates.length?`<div class="matenotes">${mates.map(m=>`<div class="matenote"><span style="color:${nameColor(m.n)};font-weight:800">${esc(m.n)}</span> ${m.r===1?"👍":m.r===-1?"👎":""}${m.note?` <span class="mq">“${esc(m.note)}”</span>`:""}</div>`).join("")}</div>`:""}
+        ${otherDayHalves(d.id)>0?`<div class="prevday">You had this on an earlier day (${otherDayHalves(d.id)} ${otherDayHalves(d.id)===1?"half":"halves"}-worth)</div>`:""}
+        <div class="ctlrow">
+          <span class="lbl">Halves today</span>
+          <span class="stepper">
+            <button data-act="h-" data-id="${d.id}" aria-label="Remove a half of ${d.name}">−</button>
+            <span class="val" data-role="hval">${t.h}</span>
+            <button data-act="h+" data-id="${d.id}" aria-label="Add a half of ${d.name}">+</button>
+          </span>
+        </div>
+        <div class="ctlrow">
+          <span class="lbl">Pints today</span>
+          <span class="stepper">
+            <button data-act="p-" data-id="${d.id}" aria-label="Remove a pint of ${d.name}">−</button>
+            <span class="val" data-role="pval">${t.p}</span>
+            <button data-act="p+" data-id="${d.id}" aria-label="Add a pint of ${d.name}">+</button>
+          </span>
+        </div>
+        <div class="ctlrow">
+          <span class="lbl">Verdict</span>
+          <span class="thumbs">
+            <button class="thumb up${e.r===1?" on":""}" data-act="up" data-id="${d.id}" aria-label="Thumbs up ${d.name}">👍</button>
+            <button class="thumb down${e.r===-1?" on":""}" data-act="down" data-id="${d.id}" aria-label="Thumbs down ${d.name}">👎</button>
+          </span>
+        </div>
+        <div class="notewrap">
+          <label for="note-${d.id}">Notes <span class="notesaved" data-role="notesaved">${e.note?"✓ saved":""}</span></label>
+          <textarea class="note" id="note-${d.id}" data-id="${d.id}" rows="2" placeholder="What did you make of it? Saves as you type.">${(e.note||"").replace(/</g,"&lt;")}</textarea>
+        </div>
+        <div class="ctlrow">
+          <button class="minibtn${sold?" on":""}" data-act="sold" data-id="${d.id}">${sold?"↩ Back on sale":"🚫 Mark sold out"}</button>
+          ${d.kind==="custom"?`<button class="minibtn del" data-act="del" data-id="${d.id}">🗑 Remove</button>`:""}
+        </div>
+        <button class="btn donebtn" data-act="done" data-id="${d.id}">✓ Done</button>
+      </div>
+    </div></div>
+  </article>`;
+}
+
+function addCardHTML(){
+  if(!addFormOpen){
+    return `<div class="addcard"><button class="btn ghost" id="addbtn" style="width:100%">＋ Add a drink that's not on the list</button></div>`;
+  }
+  const opts = Object.entries(CAT).map(([k,c])=>`<option value="${k}">${c.label}</option>`).join("");
+  return `<div class="addcard open" id="addform">
+    <div class="addtitle">Add a drink</div>
+    <div class="addgrid">
+      <input id="an-name" type="text" placeholder="Drink name (required)" maxlength="40">
+      <input id="an-brew" type="text" placeholder="Brewery / producer" maxlength="30">
+      <div class="addrow2">
+        <input id="an-abv" type="number" inputmode="decimal" step="0.1" min="0" max="20" placeholder="ABV %">
+        <select id="an-cat">${opts}</select>
+      </div>
+      <div class="btnrow" style="margin:2px 0 0">
+        <button class="btn" id="an-save">Add it</button>
+        <button class="btn ghost" id="an-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderList(){
+  refreshOthers();
+  try{ refreshNameUi(); }catch(e){}
+  const vis = visibleDrinks();
+  countsEl.textContent = `Showing ${vis.length} of ${DRINKS.length} drinks`;
+  let h = "";
+  if(!vis.length){
+    h = `<div class="empty">Nothing matches — try clearing the search or filters. 🍻</div>`;
+  } else if(sortMode===0 && filterCat==="all" && !triedOnly && !query){
+    const cids = vis.filter(d=>d.kind==="cider");
+    const ales = vis.filter(d=>d.kind==="ale");
+    const custom = vis.filter(d=>d.kind==="custom");
+    h += `<div class="sectionlabel">Ciders &amp; Perries</div>` + cids.map(cardHTML).join("");
+    h += `<div class="sectionlabel">Cask Ales</div>` + ales.map(cardHTML).join("");
+    if(custom.length) h += `<div class="sectionlabel">Your Additions</div>` + custom.map(cardHTML).join("");
+  } else {
+    h = vis.map(cardHTML).join("");
+  }
+  listEl.innerHTML = h + addCardHTML();
+}
+
+/* interactions (delegated) */
+listEl.addEventListener("click", e=>{
+  const btn = e.target.closest("button");
+  if(!btn) return;
+  if(btn.id === "addbtn"){ addFormOpen = true; renderList(); document.getElementById("an-name").focus(); return; }
+  if(btn.id === "an-cancel"){ addFormOpen = false; renderList(); return; }
+  if(btn.id === "an-save"){
+    const nm = document.getElementById("an-name").value.trim().slice(0,40);
+    if(!nm){ document.getElementById("an-name").focus(); return; }
+    const brew = document.getElementById("an-brew").value.trim().slice(0,30) || "Added by you";
+    const abv = Math.min(20, Math.max(0, parseFloat(document.getElementById("an-abv").value) || 4.0));
+    const cat = document.getElementById("an-cat").value;
+    state.custom = state.custom || [];
+    const num = "★" + (state.custom.length + 1);
+    state.custom.push({id:"X"+Date.now().toString(36), no:num, brew, name:nm, abv, cat,
+      style:CAT[cat].label, desc:"Added at the festival", kind:"custom"});
+    save(); rebuildDrinks(); addFormOpen = false; renderList();
+    return;
+  }
+  const id = btn.dataset.id;
+  if(btn.classList.contains("cardhead")){
+    const card = document.getElementById("card-"+id);
+    if(openIds.has(id)) openIds.delete(id); else openIds.add(id);
+    card.classList.toggle("open");
+    btn.setAttribute("aria-expanded", card.classList.contains("open"));
+    saveUi();
+    return;
+  }
+  if(!btn.dataset.act) return;
+  if(btn.dataset.act === "done"){
+    openIds.delete(id);
+    const card = document.getElementById("card-"+id);
+    if(card){
+      card.classList.remove("open");
+      const head = card.querySelector(".cardhead");
+      if(head) head.setAttribute("aria-expanded","false");
+      card.scrollIntoView({block:"nearest"});
+    }
+    saveUi();
+    return;
+  }
+  if(btn.dataset.act === "sold"){
+    if(state.soldOut[id]) delete state.soldOut[id]; else state.soldOut[id] = true;
+    save(); renderList();
+    return;
+  }
+  if(btn.dataset.act === "del"){
+    armTwoStage(btn, "Sure? Tap again", ()=>{
+      state.custom = (state.custom||[]).filter(c=>c.id!==id);
+      delete state.drinks[id]; delete state.soldOut[id];
+      save(); rebuildDrinks(); renderList(); refreshStats();
+    });
+    return;
+  }
+  const en = entry(id);
+  const upd = {...en, days:{...(en.days||{})}};
+  const dk = sessionKey();
+  const t = {...(upd.days[dk]||{h:0,p:0})};
+  switch(btn.dataset.act){
+    case "h+": t.h = Math.min(99, t.h+1); state.lastDrink = id; break;
+    case "h-": t.h = Math.max(0, t.h-1); break;
+    case "p+": t.p = Math.min(99, t.p+1); state.lastDrink = id; break;
+    case "p-": t.p = Math.max(0, t.p-1); break;
+    case "up": upd.r = en.r===1 ? 0 : 1; break;
+    case "down": upd.r = en.r===-1 ? 0 : -1; break;
+  }
+  upd.days[dk] = t;
+  setEntry(id, upd);
+  refreshCard(id);
+  refreshStats();
+  if(["h+","h-","p+","p-","up","down"].includes(btn.dataset.act)){
+    renderRace(); scheduleSync(); checkBadges();
+    if(["h+","p+"].includes(btn.dataset.act) && !cleanName(state.name)){
+      showWelcome();
+      showToast("⚠ Add your name up top or the lads won't see this!");
+    }
+  }
+});
+const noteSaveTimers = {};
+listEl.addEventListener("input", e=>{
+  const t = e.target;
+  if(!t.classList.contains("note")) return;
+  const id = t.dataset.id;
+  const en = {...entry(id), note: t.value.slice(0,280)};
+  setEntry(id, en);
+  refreshCard(id, true);
+  refreshStats();
+  scheduleSync();
+  checkBadges();
+  const card = document.getElementById("card-"+id);
+  const ind = card && card.querySelector('[data-role="notesaved"]');
+  if(ind){
+    ind.textContent = "saving…";
+    clearTimeout(noteSaveTimers[id]);
+    noteSaveTimers[id] = setTimeout(()=>{ ind.textContent = "✓ saved"; }, 500);
+  }
+});
+
+function refreshCard(id, skipControls){
+  const card = document.getElementById("card-"+id);
+  if(!card) return;
+  const e = entry(id);
+  const t = tEntry(id);
+  const tried = !!(hasAnyCount(e)||e.r||e.note);
+  card.classList.toggle("tried", tried);
+  card.querySelector('[data-role="verdict"]').textContent = e.r===1?"👍":e.r===-1?"👎":"";
+  card.querySelector('[data-role="tally"]').textContent = tallyText(t);
+  if(!skipControls){
+    card.querySelector('[data-role="hval"]').textContent = t.h;
+    card.querySelector('[data-role="pval"]').textContent = t.p;
+    card.querySelector(".thumb.up").classList.toggle("on", e.r===1);
+    card.querySelector(".thumb.down").classList.toggle("on", e.r===-1);
+  }
+}
+
+/* ================= MY NIGHT ================= */
+function stats(){
+  let drinks=0, pints=0, units=0;
+  const dk = sessionKey();
+  for(const [id,e] of Object.entries(state.drinks)){
+    const d = byId[id]; if(!d) continue;
+    const t = (e.days||{})[dk] || {h:0,p:0};
+    if(t.h||t.p){ drinks++; }
+    pints += (t.p||0) + (t.h||0)*0.5;
+    units += ((t.h||0)*0.284 + (t.p||0)*0.568) * d.abv;
+  }
+  return {drinks, pints, units};
+}
+function fmt(n){ return (Math.round(n*10)/10).toString().replace(/\.0$/,""); }
+
+function refreshStats(){
+  const s = stats();
+  document.getElementById("st-drinks").textContent = s.drinks;
+  document.getElementById("st-pints").textContent = fmt(s.pints);
+  document.getElementById("st-units").textContent = fmt(s.units);
+  document.getElementById("nb-night").textContent =
+    s.drinks ? `${s.drinks} today · ${fmt(s.units)} units` : "nothing yet";
+  const tried = Object.keys(state.drinks).filter(id=>{ const e = entry(id); return byId[id] && (hasAnyCount(e)||e.r); }).length;
+  const tl = document.getElementById("triedline");
+  if(tl) tl.textContent = tried ? `You've explored ${tried} of ${DRINKS.length} drinks this festival. 🎯` : "";
+  renderLog();
+  renderTrophies();
+}
+
+function renderLog(){
+  const logEl = document.getElementById("log");
+  const items = Object.entries(state.drinks)
+    .map(([id,e])=>({d:byId[id], e, t:tEntry(id), prev:otherDayHalves(id)}))
+    .filter(x=>x.d && (x.t.h||x.t.p||x.e.r||x.e.note))
+    .sort((a,b)=>(b.e.r-a.e.r) || (a.d.id>b.d.id?1:-1));
+  if(!items.length){
+    logEl.innerHTML = `<div class="empty">Nothing logged yet today.<br>Tap a drink on the Menu tab to get started. 🍻</div>`;
+    return;
+  }
+  logEl.innerHTML = items.map(({d,e,t,prev})=>`
+    <div class="logitem">
+      ${glassSVG(d)}
+      <div class="logmain">
+        <div class="logname">${d.no}. ${d.name}</div>
+        <div class="logmeta">${d.brew} · ${d.abv.toFixed(1)}%${(t.h||t.p)?` · ${tallyText(t)}`:""}${prev>0?" · earlier day too":""}</div>
+        ${e.note?`<div class="lognote">“${e.note.replace(/</g,"&lt;")}”</div>`:""}
+      </div>
+      <div class="logv">${e.r===1?"👍":e.r===-1?"👎":""}</div>
+    </div>`).join("");
+}
+
+const nameInput = document.getElementById("myname");
+nameInput.value = state.name||"";
+nameInput.addEventListener("input", ()=>{
+  state.name = nameInput.value.slice(0,24); save();
+  refreshNameUi(); updateRaceStatus(); scheduleSync();
+});
+nameInput.addEventListener("blur", renderRace);
+
+document.getElementById("sharebtn").addEventListener("click", async ()=>{
+  const s = stats();
+  const who = state.name ? state.name+"'s" : "My";
+  const lines = [`🍺 ${who} Real Ale & Cider Fest tally`,
+    `${s.drinks} drinks · ${fmt(s.pints)} pints · ~${fmt(s.units)} units`, ``];
+  const items = Object.entries(state.drinks).map(([id,e])=>({d:byId[id], e, t:tEntry(id)}))
+    .filter(x=>x.d && (x.t.h||x.t.p||x.e.r||x.e.note))
+    .sort((a,b)=>b.e.r-a.e.r);
+  for(const {d,e,t} of items){
+    const v = e.r===1?"👍":e.r===-1?"👎":"▫️";
+    let l = `${v} ${d.name} (${d.brew}, ${d.abv.toFixed(1)}%)`;
+    if(t.h||t.p) l += ` — ${[t.p?t.p+" pint"+(t.p>1?"s":""):"",t.h?t.h+" half"+(t.h>1?"ves":""):""].filter(Boolean).join(", ")}`;
+    if(e.note) l += ` — “${e.note}”`;
+    lines.push(l);
+  }
+  const meR = myRider();
+  const codeName = cleanName(state.name)||"Rider";
+  lines.push("", "📲 Get the app: " + location.href.split("#")[0]);
+  lines.push("", `[ALE-RACE ${codeName}|${meR.day}|${meR.h}|${meR.u}|${meR.last||""}|${(meR.b||[]).join(",")}|${meR.c||""}]`);
+  const revItems = Object.entries(meR.reviews||{}).map(([id,rv])=>`${id}:${rv.r||0}:${encodeURIComponent(rv.note||"")}`);
+  if(revItems.length) lines.push(`[ALE-NOTES ${codeName}|${revItems.join("|")}]`);
+  const text = lines.join("\n");
+  const btn = document.getElementById("sharebtn");
+  if(navigator.share){
+    try{
+      await navigator.share({text});
+      showToast("Sent! They tap 📋 Paste from chat to add you.");
+      return;
+    }catch(err){ if(err && err.name==="AbortError") return; }
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    btn.textContent = "Copied — paste it in the chat!";
+  }catch(err){
+    btn.textContent = "Couldn't share on this browser";
+  }
+  setTimeout(()=>{ btn.textContent = "Share my tally"; }, 2500);
+});
+
+/* two-stage buttons: first tap arms, second tap (within 4s) fires */
+function armTwoStage(btn, armedLabel, action){
+  if(btn.dataset.armed){
+    delete btn.dataset.armed;
+    btn.textContent = btn.dataset.orig;
+    action();
+    return;
+  }
+  btn.dataset.orig = btn.textContent;
+  btn.dataset.armed = "1";
+  btn.textContent = armedLabel;
+  setTimeout(()=>{
+    if(btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = btn.dataset.orig; }
+  }, 4000);
+}
+
+document.getElementById("resetbtn").addEventListener("click", e=>{
+  armTwoStage(e.currentTarget, "Sure? Tap again to wipe", ()=>{
+    state = {name: state.name, drinks: {}, mates: {}, custom: state.custom||[], soldOut: state.soldOut||{}, lastDrink: null, sessionDay: state.sessionDay};
+    save(); refreshStats(); renderList(); renderRace(); scheduleSync();
+  });
+});
+
+document.getElementById("newdaybtn").addEventListener("click", e=>{
+  armTwoStage(e.currentTarget, "Start a fresh day? Tap again", ()=>{
+    startNewDay();
+    const b = document.getElementById("newdaybtn");
+    b.textContent = "New day started! 🌅";
+    setTimeout(()=>{ b.textContent = "🌅 New day"; }, 2500);
+  });
+});
+
+/* ================= THE HALF-PINT HANDICAP ================= */
+const RACE_PALETTE = ["#E9A83E","#F5C542","#C94F6D","#8FBF6F","#7FA8D9","#C6D96A","#D4695E","#B57EDC"];
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function cleanName(n){ return (n||"").replace(/[\[\]\|<>&"]/g,"").trim().slice(0,24); }
+function myCrew(){ return cleanName(state.crew) || "Festival"; }
+function riderCrew(r){ return cleanName(r && r.c) || "Festival"; }
+/* crews match on a loose key so "The Lads", "the lads" and "TheLads " are all one crew */
+function crewKey(n){ return (cleanName(n)||"Festival").toLowerCase().replace(/[^a-z0-9]+/g,"") || "festival"; }
+function myCrewKey(){ return crewKey(myCrew()); }
+function nameColor(n){ let h=0; for(const c of n) h=(h*31+c.charCodeAt(0))>>>0; return RACE_PALETTE[h%RACE_PALETTE.length]; }
+function ordinal(n){ return n + (n===1?"st":n===2?"nd":n===3?"rd":"th"); }
+function fmtPints(h){
+  const w = Math.floor(h/2), half = h%2;
+  if(!h) return "0";
+  if(!w) return "½";
+  return half ? w+"½" : ""+w;
+}
+function pintsLabel(h){
+  if(h===0) return "0 pints";
+  if(h===1) return "½ a pint";
+  if(h===2) return "1 pint";
+  return fmtPints(h)+" pints";
+}
+const racePos = {};
+let raceView = "";
+
+/* ================= TROPHIES ================= */
+const BADGES = [
+  {id:"pear",     e:"🍐", name:"Pear Pressure",  hint:"Try a perry"},
+  {id:"dark",     e:"🖤", name:"The Dark Arts",  hint:"Try a stout, porter or mild"},
+  {id:"cider4",   e:"🍎", name:"Cider Scholar",  hint:"Try 4 different proper ciders"},
+  {id:"magpie",   e:"🐦", name:"Magpie",         hint:"Try 5 different styles"},
+  {id:"baltic",   e:"💀", name:"Baltic Brave",   hint:"Face the 10.5% Baltic Trader"},
+  {id:"critic",   e:"✍️", name:"The Critic",     hint:"Write 5 tasting notes"},
+  {id:"judge",    e:"⚖️", name:"Firm but Fair",  hint:"Dish out a 👍 and a 👎"},
+  {id:"county",   e:"🗺️", name:"County Hopper",  hint:"Ciders from 4 different counties"},
+  {id:"collector",e:"🎯", name:"The Collector",  hint:"Try 10 different drinks"},
+  {id:"stayer",   e:"🐴", name:"The Stayer",     hint:"Go the distance: 5 pints in a day"},
+];
+const BADGE_BY_ID = Object.fromEntries(BADGES.map(b=>[b.id,b]));
+
+function computeBadges(){
+  const tried = new Set(), counties = new Set(), cats = new Set();
+  let ciders = 0, notes = 0, ups = 0, downs = 0, todayHalves = 0;
+  const dk = sessionKey();
+  for(const [id,e] of Object.entries(state.drinks)){
+    const d = byId[id]; if(!d) continue;
+    if(hasAnyCount(e) || e.r){
+      tried.add(id); cats.add(d.cat);
+      if(d.cat==="cider") ciders++;
+      if(d.county) counties.add(d.county);
+    }
+    const t = (e.days||{})[dk];
+    if(t) todayHalves += (t.h||0) + (t.p||0)*2;
+    if(e.note) notes++;
+    if(e.r===1) ups++;
+    if(e.r===-1) downs++;
+  }
+  const b = [];
+  if([...tried].some(id=>byId[id].cat==="perry")) b.push("pear");
+  if([...tried].some(id=>["stout","mild"].includes(byId[id].cat))) b.push("dark");
+  if(ciders>=4) b.push("cider4");
+  if(cats.size>=5) b.push("magpie");
+  if(tried.has("A28")) b.push("baltic");
+  if(notes>=5) b.push("critic");
+  if(ups>0 && downs>0) b.push("judge");
+  if(counties.size>=4) b.push("county");
+  if(tried.size>=10) b.push("collector");
+  if(todayHalves>=10) b.push("stayer");
+  return b;
+}
+
+function showToast(text){
+  const box = document.getElementById("toasts");
+  if(!box) return;
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = text;
+  box.appendChild(t);
+  setTimeout(()=>t.remove(), 3800);
+}
+
+function checkBadges(){
+  const earned = computeBadges();
+  const seen = new Set(state.seenBadges||[]);
+  const fresh = earned.filter(x=>!seen.has(x));
+  if(!fresh.length) return;
+  state.seenBadges = [...new Set([...(state.seenBadges||[]), ...earned])];
+  save();
+  if(fresh.length>2) showToast("🏆 "+fresh.length+" trophies unlocked — check your cabinet!");
+  else fresh.forEach(id=>{ const B=BADGE_BY_ID[id]; if(B) showToast("🏆 Trophy unlocked: "+B.e+" "+B.name+"!"); });
+  renderTrophies();
+  scheduleSync();
+}
+
+function renderTrophies(){
+  const g = document.getElementById("tgrid"); if(!g) return;
+  const earned = new Set(computeBadges());
+  g.innerHTML = BADGES.map(b=>
+    `<div class="trophy${earned.has(b.id)?" won":""}"><span class="te">${b.e}</span><span class="tn">${b.name}</span><span class="th">${earned.has(b.id)?"In the cabinet!":b.hint}</span></div>`
+  ).join("");
+}
+function raceGlass(col){
+  return `<svg width="24" height="32" viewBox="0 0 34 44" aria-hidden="true"><path d="M8 10 L10.5 41 a2 2 0 0 0 2 1.8 h9 a2 2 0 0 0 2-1.8 L26 10Z" fill="${col}" stroke="#00000040"/><path d="M7.4 4 h19.2 l-.5 7 H7.9Z" fill="#F6EFDF"/><circle cx="11" cy="6.5" r="2.4" fill="#FDF8EC"/><circle cx="17" cy="5.5" r="2.8" fill="#FDF8EC"/><circle cx="23" cy="6.5" r="2.4" fill="#FDF8EC"/></svg>`;
+}
+
+const DEVICE_ID = (function(){
+  try{
+    let d = localStorage.getItem("ale-device");
+    if(!d){ d = "d"+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4); localStorage.setItem("ale-device", d); }
+    return d;
+  }catch(e){ return "d"+Math.random().toString(36).slice(2,10); }
+})();
+
+function myRider(){
+  let hh=0, u=0;
+  const dk = sessionKey();
+  const reviews = {};
+  for(const [id,e] of Object.entries(state.drinks)){
+    const d = byId[id]; if(!d) continue;
+    const t = (e.days||{})[dk] || {h:0,p:0};
+    hh += (t.h||0) + (t.p||0)*2;
+    u += ((t.h||0)*0.284 + (t.p||0)*0.568) * d.abv;
+    if(e.r || e.note) reviews[id] = {r:e.r||0, note:(e.note||"").slice(0,280)};
+  }
+  const last = state.lastDrink && byId[state.lastDrink] ? byId[state.lastDrink].name : "";
+  return {id:DEVICE_ID, n:cleanName(state.name), h:hh, u:Math.round(u*10)/10, last, day:dk, t:Date.now(), reviews, b:computeBadges(), c:myCrew()};
+}
+let liveRiders = {};
+let othersCache = {};
+function refreshOthers(){
+  const out = {};
+  for(const [k,r] of Object.entries(liveRiders)){
+    if(k === DEVICE_ID) continue;
+    out[k] = {...r, n: cleanName(r.n) || "Rider"};
+  }
+  for(const [n,r] of Object.entries(state.mates||{})){
+    if(Object.values(out).some(x=>crewKey(x.n) === crewKey(n))) continue;
+    out["p:"+n] = {...r, n};
+  }
+  if(cleanName(state.name)){
+    const meKey = crewKey(cleanName(state.name));
+    for(const k of Object.keys(out)) if(crewKey(out[k].n) === meKey) delete out[k];
+  }
+  othersCache = out;
+  return out;
+}
+function allRiders(){
+  const out = {...refreshOthers()};
+  if(cleanName(state.name)) out[DEVICE_ID] = myRider();
+  return out;
+}
+
+function pickLine(pool, seed){
+  let h = 7;
+  for(const c of seed) h = (h*33 + c.charCodeAt(0)) >>> 0;
+  return pool[h % pool.length];
+}
+function commentary(sorted){
+  const seed = sorted.map(r=>r.name+r.h).join("|");
+  if(!sorted.length) return "Under starter's orders…";
+  if(sorted.every(r=>!r.h)) return pickLine([
+    "Under starter's orders — the first half gets things moving.",
+    "Runners at the post. Someone's round, surely.",
+    "Dead calm at the track. Suspiciously quiet.",
+  ], seed);
+  if(sorted.length===1) return pickLine([
+    esc(sorted[0].name)+" is on a lone canter. Get the others on the app!",
+    esc(sorted[0].name)+" leads a field of one — the easiest win in racing.",
+  ], seed);
+  const a = esc(sorted[0].name), b = esc(sorted[1].name), gap = sorted[0].h - sorted[1].h;
+  const tail = sorted[sorted.length-1];
+  const lines = [];
+  if(gap===0) lines.push(
+    "Neck and neck — stewards are checking the photo.",
+    "Nothing between "+a+" and "+b+". A short head at most.",
+    "Dead heat at the front. Someone break the deadlock.");
+  else if(gap>=6) lines.push(
+    a+" has bolted — send out a search party.",
+    a+" is over the horizon. Paddock check, please.",
+    a+" leads by a distance. "+b+" left admiring the view.");
+  else if(gap>=3) lines.push(
+    a+" pulling clear — "+b+" needs to answer.",
+    a+" kicks on, "+pintsLabel(gap)+" to the good. "+b+" rummaging for a response.",
+    "Daylight in second? No, that's "+b+", "+pintsLabel(gap)+" back.");
+  else lines.push(
+    a+" shades it from "+b+" by "+pintsLabel(gap)+".",
+    a+" by a nose. "+b+" stalking every move.",
+    b+" lurking just off the pace — "+pintsLabel(gap)+" in it.");
+  if(sorted.length>2 && !tail.h) lines.push(esc(tail.name)+" is still in the paddock. Everything alright over there?");
+  if(sorted[0].last) lines.push(a+" leads the way, fuelled by "+esc(sorted[0].last)+".");
+  return pickLine(lines, seed);
+}
+
+function crewShowHTML(nameSet){
+  const votes = {};
+  for(const [k,r] of Object.entries(allRiders())){
+    const n = r.n || k;
+    if(nameSet && !nameSet.has(n)) continue;
+    for(const [id,rv] of Object.entries(r.reviews||{})){
+      if(!byId[id] || !rv.r) continue;
+      votes[id] = votes[id] || {up:[], down:[]};
+      (rv.r===1 ? votes[id].up : votes[id].down).push(n);
+    }
+  }
+  const ranked = Object.entries(votes).map(([id,v])=>({d:byId[id], up:v.up, down:v.down, net:v.up.length-v.down.length}));
+  if(!ranked.length) return "";
+  const best = ranked.filter(x=>x.net>0).sort((x,y)=>y.net-x.net || y.up.length-x.up.length)[0];
+  const worst = ranked.filter(x=>x.down.length>0 && x.down.length>=x.up.length).sort((x,y)=>y.down.length-x.down.length)[0];
+  if(!best && !worst) return "";
+  let h = `<div class="showcard">`;
+  if(best) h += `<div class="showrow">🏆 <strong>Crew's Best in Show:</strong> ${esc(best.d.name)} <span class="showmut">(${esc(best.d.brew)}, ${best.d.abv.toFixed(1)}%) — backed by ${best.up.map(esc).join(", ")}</span></div>`;
+  if(worst) h += `<div class="showrow">🚫 <strong>One to swerve:</strong> ${esc(worst.d.name)} <span class="showmut">— says ${worst.down.map(esc).join(", ")}</span></div>`;
+  return h + `</div>`;
+}
+
+function renderRace(){
+  const track = document.getElementById("track");
+  if(!track) return;
+  refreshNameUi();
+  const me = cleanName(state.name);
+  document.getElementById("joinbox").hidden = !!me;
+  const rn = document.getElementById("racename");
+  if(rn && rn.value !== (state.name||"") && document.activeElement !== rn) rn.value = state.name||"";
+  const everyone = Object.entries(allRiders()).map(([k,r])=>({name:r.n||k, h:r.h||0, u:r.u||0, last:r.last||"", b:r.b||[], c:riderCrew(r), ck:crewKey(riderCrew(r)), day:r.day||""}));
+  /* only riders on the same festival day race today; earlier sessions are listed separately */
+  const myDate = dayDate(sessionKey());
+  const all = everyone.filter(r=>!r.day || dayDate(r.day) === myDate);
+  const earlier = everyone.filter(r=>r.day && dayDate(r.day) !== myDate);
+  const crewLabel = {};
+  everyone.forEach(r=>{ if(!crewLabel[r.ck]) crewLabel[r.ck] = r.c; });
+  crewLabel[myCrewKey()] = myCrew();
+  const crews = [...new Set(all.map(r=>r.ck))].sort((a,b)=>(crewLabel[a]||a).localeCompare(crewLabel[b]||b));
+  const multiCrew = crews.length > 1;
+  /* crew switcher — invisible until a second crew exists */
+  const cc = document.getElementById("crewchips");
+  cc.hidden = !multiCrew;
+  if(multiCrew){
+    if(!crews.includes(raceView) && raceView !== "__all") raceView = myCrewKey();
+    cc.innerHTML = crews.map(c=>`<button class="chip${raceView===c?" on":""}" data-crew="${esc(c)}">${esc(crewLabel[c]||c)}${c===myCrewKey()?" ✓":""}</button>`).join("")
+      + `<button class="chip${raceView==="__all"?" on":""}" data-crew="__all">All crews</button>`;
+  } else {
+    raceView = myCrewKey();
+  }
+  /* crew name suggestions so nobody re-types a crew slightly differently */
+  const dl = document.getElementById("crewlist");
+  if(dl) dl.innerHTML = [...new Set(everyone.map(r=>r.c))].filter(c=>crewKey(c)!=="festival").map(c=>`<option value="${esc(c)}">`).join("");
+  const showAll = multiCrew && raceView === "__all";
+  const riders = (showAll ? all : all.filter(r=>r.ck === raceView)).sort((a,b)=> b.h - a.h || a.name.localeCompare(b.name));
+  const nb = document.getElementById("nb-race");
+  const myCrewRiders = all.filter(r=>r.ck === myCrewKey()).sort((a,b)=> b.h - a.h || a.name.localeCompare(b.name));
+  if(!all.length) nb.textContent = "no runners";
+  else if(me){ const i = myCrewRiders.findIndex(r=>r.name===me); nb.textContent = i>=0 ? ordinal(i+1)+" of "+myCrewRiders.length : all.length+" runners"; }
+  else nb.textContent = all.length + (all.length===1?" runner":" runners");
+  const standings = document.getElementById("standings");
+  if(!riders.length){
+    track.innerHTML = `<div class="empty" style="margin-top:14px">No runners yet today — pop your name in above and log your first half. 🐎</div>`;
+    standings.innerHTML = earlierHTML(earlier);
+    return;
+  }
+  const joinBtn = (multiCrew && !showAll && raceView !== myCrewKey())
+    ? `<button class="btn ghost" id="joincrewbtn" style="width:100%;margin:12px 0 2px" data-crew="${esc(crewLabel[raceView]||raceView)}">🤝 Join ${esc(crewLabel[raceView]||raceView)}</button>`
+    : "";
+  const scale = Math.max(riders[0].h + 2, 10);
+  track.innerHTML = joinBtn + riders.map(r=>{
+    const pct = Math.min(88, (r.h/scale)*88);
+    const col = nameColor(r.name);
+    const from = racePos[r.name] !== undefined ? racePos[r.name] : 0;
+    racePos[r.name] = pct;
+    return `<div class="lane">
+      <div class="lanetop"><span class="rname" style="color:${col}">${esc(r.name)}${r.name===me?' <span class="you">(you)</span>':""}${showAll?` <span class="you">· ${esc(r.c)}</span>`:""}</span><span class="rstat">${pintsLabel(r.h)}</span></div>
+      <div class="lanetrack"><div class="ticks"></div><span class="flagpost">🏁</span><span class="runner" style="left:${from}%" data-target="${pct}">${raceGlass(col)}</span></div>
+    </div>`;
+  }).join("");
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+    track.querySelectorAll(".runner").forEach(el=>{ el.style.left = el.dataset.target + "%"; });
+  }); });
+  const medals = ["🥇","🥈","🥉"];
+  let crewCompare = "";
+  if(showAll){
+    const agg = crews.map(c=>{
+      const rs = all.filter(r=>r.ck===c);
+      return {c:crewLabel[c]||c, n:rs.length, h:rs.reduce((s,r)=>s+r.h,0), tr:rs.reduce((s,r)=>s+(r.b||[]).length,0)};
+    }).sort((a,b)=>b.h-a.h);
+    crewCompare = `<div class="showcard">` + agg.map((g,i)=>
+      `<div class="showrow">${medals[i]||ordinal(i+1)} <strong>${esc(g.c)}</strong> <span class="showmut">— ${pintsLabel(g.h)} between ${g.n} rider${g.n===1?"":"s"} · ${g.tr} troph${g.tr===1?"y":"ies"}</span></div>`
+    ).join("") + `</div>`;
+  }
+  const viewNames = new Set(riders.map(r=>r.name));
+  standings.innerHTML = `<div class="commentary">${commentary(riders)}</div>` + riders.map((r,i)=>{
+    const gap = i===0 ? "leading" : pintsLabel(riders[0].h - r.h)+" behind";
+    const cabinet = (r.b||[]).map(id=>BADGE_BY_ID[id]?BADGE_BY_ID[id].e:"").join("");
+    return `<div class="standing"><span class="pos">${medals[i]||ordinal(i+1)}</span><div class="smain"><div class="sname">${esc(r.name)}${cabinet?` <span class="sbadges" title="Trophies">${cabinet}</span>`:""}</div><div class="smeta">${pintsLabel(r.h)} · ~${fmt(r.u)} units${r.last?" · last: "+esc(r.last):""} · ${gap}</div></div></div>`;
+  }).join("") + crewCompare + crewShowHTML(showAll ? null : viewNames) + earlierHTML(earlier);
+}
+
+function earlierHTML(list){
+  if(!list.length) return "";
+  const bits = list.slice().sort((a,b)=>b.h-a.h).map(r=>`${esc(r.name)} ${pintsLabel(r.h)}`).join(" · ");
+  return `<p class="counts" style="margin-top:14px">Earlier sessions, not in today's race: ${bits}</p>`;
+}
+
+/* --- LIVE SYNC: anonymous pub/sub. No accounts. Works for anyone with the link. --- */
+const SYNC_TOPIC = "clactonfest_2c9697b2f108c7c359f6";
+const SYNC_URL = "https://ntfy.sh/" + SYNC_TOPIC;
+let syncTimer = null, lastPushAt = 0, liveState = "connecting", es = null, pushing = false;
+
+function updateRaceStatus(){
+  const el = document.getElementById("racestatus");
+  if(!el) return;
+  const me = cleanName(state.name);
+  let cls = "", txt = "";
+  const n = Object.keys(liveRiders).filter(k=>k!==DEVICE_ID).length;
+  if(!me) txt = "Enter your name below to saddle up";
+  else if(liveState === "live"){
+    cls = "live";
+    txt = "Live · riding as " + esc(me) + (n ? " · " + n + " other" + (n===1?"":"s") + " on the board" : " · waiting for the others");
+  }
+  else if(liveState === "connecting") txt = "Connecting to the live board…";
+  else txt = "No signal — your drinks are safe and sync when you're back";
+  el.className = "racestatus " + cls;
+  el.innerHTML = '<span class="dot2"></span>' + txt;
+}
+
+function riderPayload(){
+  const r = myRider();
+  let body = JSON.stringify(r);
+  if(body.length > 3200){
+    const trimmed = {};
+    for(const [k,v] of Object.entries(r.reviews||{})) trimmed[k] = {r:v.r||0, note:(v.note||"").slice(0,60)};
+    body = JSON.stringify({...r, reviews:trimmed});
+  }
+  if(body.length > 3600){
+    const ratingsOnly = {};
+    for(const [k,v] of Object.entries(r.reviews||{})) if(v.r) ratingsOnly[k] = {r:v.r};
+    body = JSON.stringify({...r, reviews:ratingsOnly});
+  }
+  return body;
+}
+
+async function pushNow(){
+  if(pushing) return;
+  if(!cleanName(state.name)) return;
+  pushing = true; lastPushAt = Date.now();
+  try{
+    const res = await fetch(SYNC_URL, {method:"POST", body: riderPayload()});
+    liveState = res.ok ? "live" : "offline";
+    if(!res.ok){ clearTimeout(syncTimer); syncTimer = setTimeout(pushNow, 15000); }
+  }catch(err){
+    liveState = "offline";
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(pushNow, 20000);
+  }
+  pushing = false;
+  updateRaceStatus();
+}
+
+function scheduleSync(){
+  if(!cleanName(state.name)) return;
+  clearTimeout(syncTimer);
+  const since = Date.now() - lastPushAt;
+  syncTimer = setTimeout(pushNow, since > 8000 ? 1200 : (8000 - since));
+}
+
+function ingest(raw){
+  try{
+    const r = JSON.parse(raw);
+    if(!r || !r.id || !r.n) return false;
+    if(r.id === DEVICE_ID) return false;
+    const cur = liveRiders[r.id];
+    if(cur && (cur.t||0) >= (r.t||0)) return false;
+    liveRiders[r.id] = r;
+    return true;
+  }catch(e){ return false; }
+}
+
+function afterIngest(changed){
+  if(!changed) return;
+  if(welcomeEl && !welcomeEl.hidden) renderCrewPicker();
+  renderRace();
+  const ae = document.activeElement;
+  const typing = ae && ae.classList && (ae.classList.contains("note") || ae.tagName === "INPUT");
+  if(!typing) renderList();
+}
+
+async function pullHistory(){
+  try{
+    const res = await fetch(SYNC_URL + "/json?poll=1&since=16h");
+    const txt = await res.text();
+    let changed = false;
+    for(const line of txt.split("\n")){
+      if(!line.trim()) continue;
+      try{
+        const m = JSON.parse(line);
+        if(m.event === "message" && m.message && ingest(m.message)) changed = true;
+      }catch(e){}
+    }
+    liveState = "live";
+    afterIngest(changed);
+    if(!welcomeEl.hidden) renderCrewPicker();
+  }catch(err){ liveState = "offline"; }
+  updateRaceStatus();
+}
+
+function startLive(){
+  try{
+    if(es){ try{ es.close(); }catch(e){} }
+    es = new EventSource(SYNC_URL + "/sse");
+    es.onopen = ()=>{ liveState = "live"; updateRaceStatus(); };
+    es.onmessage = ev=>{
+      try{
+        const m = JSON.parse(ev.data);
+        if(m.event !== "message" || !m.message) return;
+        const known = Object.keys(liveRiders).length;
+        if(ingest(m.message)){
+          const r = JSON.parse(m.message);
+          afterIngest(true);
+          if(Object.keys(liveRiders).length > known) showToast("🏇 " + (r.n||"A rider") + " has joined the race!");
+        }
+      }catch(e){}
+    };
+    es.onerror = ()=>{ if(liveState !== "offline"){ liveState = "offline"; updateRaceStatus(); } };
+  }catch(err){ liveState = "offline"; updateRaceStatus(); }
+}
+
+/* --- race code import (works fully offline) --- */
+document.getElementById("pastebtn").addEventListener("click", async ()=>{
+  const btn = document.getElementById("pastebtn");
+  const box = document.getElementById("importbox");
+  try{
+    const txt = await navigator.clipboard.readText();
+    if(!txt){ throw new Error("empty"); }
+    box.value = txt;
+    document.getElementById("importbtn").click();
+  }catch(err){
+    btn.textContent = "Copy their message first, then tap again";
+    box.focus();
+    setTimeout(()=>{ btn.textContent = "📋 Paste from chat"; }, 3000);
+  }
+});
+
+document.getElementById("importbtn").addEventListener("click", ()=>{
+  const box = document.getElementById("importbox");
+  const msg = document.getElementById("importmsg");
+  const meName = cleanName(state.name);
+  state.mates = state.mates || {};
+  const added = new Set();
+  let m;
+  const raceRe = /\[ALE-RACE ([^\|\]]{1,24})\|([^\|\]]{4,16})\|(\d{1,3})\|([\d.]{1,6})\|([^\|\]]{0,60})(?:\|([a-z0-9_,]{0,140}))?(?:\|([^\|\]]{0,24}))?\]/g;
+  while((m = raceRe.exec(box.value)) !== null){
+    const n = cleanName(m[1]);
+    if(!n || n === meName) continue;
+    const prev = state.mates[n] || {};
+    state.mates[n] = {...prev, day: m[2], h: parseInt(m[3],10)||0, u: parseFloat(m[4])||0, last: m[5]||"",
+      b: (m[6]||"").split(",").filter(Boolean), c: cleanName(m[7]||"") || prev.c || "", t: Date.now()};
+    added.add(n);
+  }
+  const notesRe = /\[ALE-NOTES ([^\|\]]{1,24})\|([^\]]+)\]/g;
+  while((m = notesRe.exec(box.value)) !== null){
+    const n = cleanName(m[1]);
+    if(!n || n === meName) continue;
+    const prev = state.mates[n] || {t: Date.now()};
+    const reviews = {...(prev.reviews||{})};
+    for(const item of m[2].split("|")){
+      const parts = item.split(":");
+      if(parts.length < 2) continue;
+      const id = parts[0].trim();
+      if(!byId[id]) continue;
+      let note = "";
+      try{ note = decodeURIComponent(parts[2]||""); }catch(err){}
+      reviews[id] = {r: parseInt(parts[1],10)||0, note: note.slice(0,280)};
+    }
+    state.mates[n] = {...prev, reviews};
+    added.add(n);
+  }
+  if(added.size){
+    save(); box.value = "";
+    msg.textContent = "On the board: " + [...added].join(", ") + " 🏇";
+    renderRace(); renderList(); scheduleSync();
+  } else {
+    msg.textContent = "No race code found in that — it should contain [ALE-RACE …]";
+  }
+  setTimeout(()=>{ msg.textContent = ""; }, 4000);
+});
+
+document.getElementById("racename").addEventListener("input", e=>{
+  state.name = e.target.value.slice(0,24); save();
+  nameInput.value = state.name;
+  refreshNameUi(); updateRaceStatus(); scheduleSync();
+});
+document.getElementById("racename").addEventListener("blur", renderRace);
+
+document.getElementById("crewchips").addEventListener("click", e=>{
+  const b = e.target.closest(".chip"); if(!b) return;
+  raceView = b.dataset.crew;
+  renderRace();
+});
+
+document.getElementById("track").addEventListener("click", e=>{
+  const b = e.target.closest("#joincrewbtn"); if(!b) return;
+  state.crew = b.dataset.crew.slice(0,24);
+  save();
+  crewInput.value = state.crew;
+  raceView = myCrewKey();
+  showToast("🤝 You're now riding with " + b.dataset.crew + "!");
+  renderRace(); renderList(); scheduleSync();
+});
+
+const crewInput = document.getElementById("mycrew");
+crewInput.value = state.crew||"";
+crewInput.addEventListener("input", ()=>{
+  state.crew = crewInput.value.slice(0,24); save();
+  raceView = myCrew();
+  scheduleSync();
+});
+crewInput.addEventListener("blur", ()=>{ renderRace(); renderList(); });
+
+/* --- first-open name prompt --- */
+const welcomeEl = document.getElementById("welcome");
+function refreshNameUi(){
+  document.getElementById("namebanner").hidden = !!cleanName(state.name);
+}
+function renderCrewPicker(){
+  const box = document.getElementById("crewpick");
+  if(!box) return;
+  const crews = {};
+  for(const r of Object.values(liveRiders)){
+    const c = cleanName(r.c) || "";
+    if(c && crewKey(c) !== "festival") crews[crewKey(c)] = c;
+  }
+  const list = Object.values(crews);
+  const cur = document.getElementById("wcrew").value;
+  box.innerHTML = list.length
+    ? `<div class="crewpicklbl">Join a crew that's already going:</div>` +
+      list.map(c=>`<button type="button" class="chip${crewKey(cur)===crewKey(c)?" on":""}" data-pick="${esc(c)}">${esc(c)}</button>`).join("") +
+      `<div class="crewpicklbl">...or type a new crew name below to start your own.</div>`
+    : `<div class="crewpicklbl">Starting a crew? Type a name below (e.g. The Lads). Leave it blank to ride solo — you can join a crew later.</div>`;
+}
+document.getElementById("crewpick").addEventListener("click", e=>{
+  const b = e.target.closest("[data-pick]"); if(!b) return;
+  document.getElementById("wcrew").value = b.dataset.pick;
+  renderCrewPicker();
+});
+
+function showWelcome(){
+  welcomeEl.hidden = false;
+  renderCrewPicker();
+  document.getElementById("wname").value = state.name || "";
+  document.getElementById("wcrew").value = state.crew || "";
+  window.scrollTo({top:0});
+  setTimeout(()=>document.getElementById("wname").focus(), 60);
+}
+function submitWelcome(){
+  const v = document.getElementById("wname").value.slice(0,24);
+  if(!cleanName(v)){ document.getElementById("wname").focus(); return; }
+  state.name = v;
+  state.crew = document.getElementById("wcrew").value.slice(0,24);
+  save();
+  nameInput.value = v;
+  crewInput.value = state.crew;
+  raceView = myCrew();
+  welcomeEl.hidden = true;
+  refreshNameUi(); updateRaceStatus(); renderRace(); renderList(); scheduleSync();
+}
+document.getElementById("wgo").addEventListener("click", submitWelcome);
+document.getElementById("wname").addEventListener("keydown", e=>{ if(e.key==="Enter") submitWelcome(); });
+document.getElementById("wskip").addEventListener("click", ()=>{
+  welcomeEl.hidden = true;
+  try{ sessionStorage.setItem("ale-skip-name","1"); }catch(err){}
+  refreshNameUi();
+});
+document.getElementById("namebanner").addEventListener("click", showWelcome);
+
+/* --- UI continuity across live reloads --- */
+function saveUi(){
+  try{
+    sessionStorage.setItem("ale-ui", JSON.stringify({t:Date.now(), tab:currentTab, open:[...openIds], y:window.scrollY}));
+  }catch(err){}
+}
+function restoreUi(){
+  try{
+    const raw = sessionStorage.getItem("ale-ui");
+    if(!raw) return null;
+    const ui = JSON.parse(raw);
+    if(Date.now() - (ui.t||0) > 90000) return null;
+    (ui.open||[]).forEach(id=>openIds.add(id));
+    return ui;
+  }catch(err){ return null; }
+}
+let scrollSaveTimer = null;
+window.addEventListener("scroll", ()=>{
+  clearTimeout(scrollSaveTimer);
+  scrollSaveTimer = setTimeout(saveUi, 600);
+}, {passive:true});
+
+/* --- reconnect the live board whenever the app comes back to the front --- */
+document.addEventListener("visibilitychange", ()=>{
+  if(document.hidden){ saveUi(); }
+  else { pullHistory(); startLive(); }
+});
+window.addEventListener("online", ()=>{ pullHistory(); startLive(); scheduleSync(); });
+
+/* ================= NAV ================= */
+function showTab(tab){
+  currentTab = tab;
+  document.querySelectorAll(".navbtn").forEach(x=>x.classList.toggle("on", x.dataset.panel===tab));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("on"));
+  document.getElementById("panel-"+tab).classList.add("on");
+  if(tab==="race"){ renderRace(); updateRaceStatus(); }
+  if(tab==="menu"){ renderList(); }
+  saveUi();
+}
+document.querySelectorAll(".navbtn").forEach(b=>{
+  b.addEventListener("click", ()=>{ showTab(b.dataset.panel); window.scrollTo({top:0}); });
+});
+
+/* ================= share link + QR ================= */
+(function(){
+  const url = location.href.split("#")[0];
+  const el = document.getElementById("applink");
+  if(el) el.textContent = url;
+  const img = document.getElementById("qrimg");
+  if(img) img.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=" + encodeURIComponent(url);
+  const btn = document.getElementById("copylinkbtn");
+  if(btn) btn.addEventListener("click", async ()=>{
+    try{
+      if(navigator.share){ await navigator.share({title:"Real Ale & Cider Festival", url}); return; }
+      await navigator.clipboard.writeText(url);
+      btn.textContent = "✓ Link copied";
+    }catch(e){ btn.textContent = "✓ Link copied"; }
+    setTimeout(()=>{ btn.textContent = "🔗 Copy link"; }, 2500);
+  });
+})();
+
+/* ================= init ================= */
+rebuildDrinks();
+const savedUi = restoreUi();
+buildChips();
+renderList();
+refreshStats();
+renderRace();
+updateRaceStatus();
+checkBadges();
+refreshNameUi();
+pullHistory();
+startLive();
+/* warn if this browser can't keep data between visits (private mode / some in-app browsers) */
+(function(){
+  try{
+    localStorage.setItem("__ale_probe","1");
+    if(localStorage.getItem("__ale_probe") !== "1") throw new Error("nope");
+    localStorage.removeItem("__ale_probe");
+  }catch(err){
+    setTimeout(()=>showToast("⚠ This browser won't save your list between visits — open the link in Safari or Chrome instead."), 800);
+  }
+})();
+let skippedName = false;
+try{ skippedName = sessionStorage.getItem("ale-skip-name") === "1"; }catch(e){}
+if(!cleanName(state.name) && !skippedName) showWelcome();
+if(savedUi){
+  if(savedUi.tab && savedUi.tab !== "menu") showTab(savedUi.tab);
+  if(savedUi.y) requestAnimationFrame(()=>window.scrollTo({top:savedUi.y}));
+}
+</script>
+
+</body>
+</html>
