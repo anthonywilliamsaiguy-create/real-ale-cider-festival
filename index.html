@@ -82,6 +82,16 @@
     font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
   }
   .sortbtn.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+  .dicebtn{
+    flex:none;background:var(--accent);color:var(--accent-ink);border:none;
+    border-radius:999px;padding:10px 16px;font:inherit;font-size:14px;font-weight:800;
+    cursor:pointer;white-space:nowrap;
+  }
+  .addtop{
+    width:100%;background:var(--surface);border:1px dashed var(--line);color:var(--accent);
+    border-radius:12px;padding:12px;font:inherit;font-size:14px;font-weight:800;
+    cursor:pointer;margin:10px 0 2px;
+  }
   .chips{
     display:flex;gap:7px;overflow-x:auto;padding:10px 2px 2px;
     scrollbar-width:none;-webkit-overflow-scrolling:touch;
@@ -418,11 +428,12 @@
           <input id="q" type="search" placeholder="Search beer, brewery, number…" autocomplete="off">
         </div>
         <button id="sortbtn" class="sortbtn" title="Change sort order">No. ↑</button>
-        <button id="dicebtn" class="sortbtn" title="Pick me something I haven't tried">🎲</button>
+        <button id="dicebtn" class="dicebtn" title="Pick me something I haven't tried">🎲 Surprise me</button>
       </div>
       <div class="chips" id="chips"></div>
     </div>
     <p class="counts" id="counts"></p>
+    <button class="addtop" id="addtopbtn">➕ Add a drink that's not on the list</button>
     <div id="list"></div>
   </section>
 
@@ -542,7 +553,7 @@
 </nav>
 
 <script>
-const BUILD = 29;
+const BUILD = 30;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -781,6 +792,13 @@ chipsEl.addEventListener("click", e=>{
 document.getElementById("q").addEventListener("input", e=>{
   query = e.target.value.trim().toLowerCase(); renderList();
 });
+document.getElementById("addtopbtn").addEventListener("click", ()=>{
+  addFormOpen = true; renderList();
+  const f = document.getElementById("addform");
+  if(f) f.scrollIntoView({behavior:"smooth", block:"center"});
+  const n = document.getElementById("an-name"); if(n) n.focus();
+});
+
 document.getElementById("dicebtn").addEventListener("click", ()=>{
   const pool = visibleDrinks().filter(d=>!state.soldOut[d.id] && !hasAnyCount(entry(d.id)));
   if(!pool.length){ showToast("🎲 Nothing left untried in this view — you've done the lot!"); return; }
