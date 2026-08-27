@@ -533,7 +533,7 @@
 </nav>
 
 <script>
-const BUILD = 22;
+const BUILD = 23;
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -1751,8 +1751,14 @@ document.getElementById("track").addEventListener("click", e=>{
 const crewInput = document.getElementById("mycrew");
 crewInput.value = state.crew||"";
 crewInput.addEventListener("input", ()=>{
-  state.crew = crewInput.value.slice(0,24); save();
-  raceView = myCrew();
+  const typed = crewInput.value.slice(0,24);
+  /* starting a brand new crew makes you its owner; joining an existing one does not */
+  if(cleanName(typed) && crewKey(typed) !== myCrewKey()){
+    const existing = Object.values(liveRiders).map(r=>crewKey(riderCrew(r)));
+    state.crewOwner = !existing.includes(crewKey(typed));
+  }
+  state.crew = typed; save();
+  raceView = myCrewKey();
   scheduleSync();
 });
 crewInput.addEventListener("blur", ()=>{ renderRace(); renderList(); });
