@@ -276,6 +276,7 @@
   .matenotes{display:grid;gap:6px;background:var(--surface2);border-radius:10px;padding:10px 12px}
   .matenote{font-size:13px;color:var(--muted)}
   .matenote .mq{color:var(--text);font-style:italic}
+  .crewtag{font-size:10.5px;color:var(--faint);background:var(--surface);border-radius:4px;padding:1px 5px;font-weight:700}
   .prevday{font-size:12.5px;color:var(--faint);font-style:italic}
 
   /* ---------- sold out ---------- */
@@ -428,7 +429,7 @@
   <section id="panel-race" class="panel">
     <div class="racehead">
       <h2 class="racetitle">The Half-Pint Handicap</h2>
-      <p class="racesub">Every half pint moves your glass one furlong, left to right, towards the flag. The board runs all night — it only resets when you tap <em>New day</em>. Friendly rivalry only; it's a marathon, not a sprint. 🐎</p>
+      <p class="racesub">Every half pint moves your glass one furlong, left to right, towards the flag. The board runs all night — it only resets when you tap <em>New session</em>. Friendly rivalry only; it's a marathon, not a sprint. 🐎</p>
       <p class="racestatus" id="racestatus"><span class="dot2"></span>Checking for live connection…</p>
       <div class="chips" id="crewchips" style="margin-top:10px" hidden></div>
       <p class="counts" id="crewcaption" style="margin:4px 2px 0"></p>
@@ -470,11 +471,11 @@
       <div class="stat"><div class="n" id="st-pints">0</div><div class="l">Pints today</div></div>
       <div class="stat"><div class="n" id="st-units">0</div><div class="l">Units today</div></div>
     </div>
-    <p class="counts" style="margin-top:-4px">Tallies keep running (even past midnight) until you tap New day — ratings and notes always carry over.</p>
+    <p class="counts" style="margin-top:-4px">Tallies keep running (even past midnight) until you tap New session — ratings and notes always carry over.</p>
     <p class="counts" id="triedline" style="margin-top:-6px"></p>
     <div class="btnrow">
       <button id="sharebtn" class="btn">Share my tally</button>
-      <button id="newdaybtn" class="btn ghost">🌅 New day</button>
+      <button id="newdaybtn" class="btn ghost">🌅 New session</button>
     </div>
     <div id="log"></div>
     <div class="infocard" style="margin-top:16px">
@@ -507,8 +508,8 @@
     <div class="infocard">
       <h3>How this works</h3>
       <p class="mut"><strong>Logging drinks.</strong> Tap a drink, add halves or pints, give it a 👍 or 👎 and jot a note. Numbers match the festival programme, so you can just tell the bar the number. Stuck for a choice? Tap 🎲.</p>
-      <p class="mut"><strong>Your crew.</strong> You're in one crew at a time. Everyone in it sees each other's pints, ratings and notes, live. On the Race tab you can tap another crew's name to peek at their race — that doesn't move you, it's just a look.</p>
-      <p class="mut"><strong>The race.</strong> Every half pint moves your glass a furlong. It runs all night and only resets when you tap <em>New day</em> on your own phone. Ratings, notes and trophies always carry over.</p>
+      <p class="mut"><strong>Your crew.</strong> You're in one crew at a time. Everyone in it sees each other's pints, ratings and notes, live. On the Race tab you can tap another crew's name to peek at their race — that doesn't move you, it's just a look. Tasting notes are shared with everyone at the festival, whatever crew they're in, so you get the benefit of the whole room's opinion.</p>
+      <p class="mut"><strong>The race.</strong> Every half pint moves your glass a furlong. It runs all night and only resets when you tap <em>New session</em> on your own phone. Ratings, notes and trophies always carry over.</p>
       <p class="mut"><strong>If the signal drops</strong> everything keeps working on your phone and syncs when you're back. Cask run dry? Open it and tap <em>Mark sold out</em>. Something not listed? Add it at the bottom of the menu.</p>
     </div>
     <div class="infocard">
@@ -802,13 +803,16 @@ function tallyText(e){
 }
 
 function mateReviewsFor(id){
+  /* everyone's tasting notes are worth reading, whatever crew they're in */
+  const mine = myCrewKey();
   const out = [];
-  const crew = myCrewKey();
   for(const [k,r] of Object.entries(othersCache)){
-    if(crewKey(riderCrew(r)) !== crew) continue;
     const rv = r.reviews && r.reviews[id];
-    if(rv && (rv.r || rv.note)) out.push({n: r.n||k, r:rv.r||0, note:rv.note||""});
+    if(!rv || (!rv.r && !rv.note)) continue;
+    const rc = riderCrew(r);
+    out.push({n: r.n||k, r:rv.r||0, note:rv.note||"", crew: rc, own: crewKey(rc) === mine});
   }
+  out.sort((a,b)=>(b.own?1:0)-(a.own?1:0));
   return out;
 }
 
@@ -842,7 +846,7 @@ function cardHTML(d){
     <p class="cdesc">${d.desc}</p>
     <div class="cbody"><div>
       <div class="controls">
-        ${mates.length?`<div class="matenotes">${mates.map(m=>`<div class="matenote"><span style="color:${nameColor(m.n)};font-weight:800">${esc(m.n)}</span> ${m.r===1?"👍":m.r===-1?"👎":""}${m.note?` <span class="mq">“${esc(m.note)}”</span>`:""}</div>`).join("")}</div>`:""}
+        ${mates.length?`<div class="matenotes">${mates.map(m=>`<div class="matenote"><span style="color:${nameColor(m.n)};font-weight:800">${esc(m.n)}</span>${m.own?"":` <span class="crewtag">${esc(m.crew)}</span>`} ${m.r===1?"👍":m.r===-1?"👎":""}${m.note?` <span class="mq">“${esc(m.note)}”</span>`:""}</div>`).join("")}</div>`:""}
         ${otherDayHalves(d.id)>0?`<div class="prevday">You had this on an earlier day (${otherDayHalves(d.id)} ${otherDayHalves(d.id)===1?"half":"halves"}-worth)</div>`:""}
         <div class="ctlrow">
           <span class="lbl">Halves today</span>
@@ -1161,11 +1165,11 @@ document.getElementById("resetbtn").addEventListener("click", e=>{
 });
 
 document.getElementById("newdaybtn").addEventListener("click", e=>{
-  armTwoStage(e.currentTarget, "Start a fresh day? Tap again", ()=>{
+  armTwoStage(e.currentTarget, "Start a fresh session? Tap again", ()=>{
     startNewDay();
     const b = document.getElementById("newdaybtn");
-    b.textContent = "New day started! 🌅";
-    setTimeout(()=>{ b.textContent = "🌅 New day"; }, 2500);
+    b.textContent = "New session started! 🌅";
+    setTimeout(()=>{ b.textContent = "🌅 New session"; }, 2500);
   });
 });
 
@@ -1470,15 +1474,6 @@ function renderRace(){
   }); });
   const medals = ["🥇","🥈","🥉"];
   let crewCompare = "";
-  if(showAll){
-    const agg = crews.map(c=>{
-      const rs = all.filter(r=>r.ck===c);
-      return {c:crewLabel[c]||c, n:rs.length, h:rs.reduce((s,r)=>s+r.h,0), tr:rs.reduce((s,r)=>s+(r.b||[]).length,0)};
-    }).sort((a,b)=>b.h-a.h);
-    crewCompare = `<div class="showcard">` + agg.map((g,i)=>
-      `<div class="showrow">${medals[i]||ordinal(i+1)} <strong>${esc(g.c)}</strong> <span class="showmut">— ${pintsLabel(g.h)} between ${g.n} rider${g.n===1?"":"s"} · ${g.tr} troph${g.tr===1?"y":"ies"}</span></div>`
-    ).join("") + `</div>`;
-  }
   const viewNames = new Set(riders.map(r=>r.name));
   standings.innerHTML = `<div class="commentary">${commentary(riders)}</div>` + riders.map((r,i)=>{
     const gap = i===0 ? "leading" : pintsLabel(riders[0].h - r.h)+" behind";
@@ -1510,7 +1505,7 @@ function manageHTML(riders){
 function earlierHTML(list){
   if(!list.length) return "";
   const bits = list.slice().sort((a,b)=>b.h-a.h).map(r=>`${esc(r.name)} ${pintsLabel(r.h)}`).join(" · ");
-  return `<p class="counts" style="margin-top:14px">Earlier sessions, not in today's race: ${bits}</p>`;
+  return `<p class="counts" style="margin-top:14px">Earlier sessions, not in this one: ${bits}</p>`;
 }
 
 /* --- LIVE SYNC: anonymous pub/sub. No accounts. Works for anyone with the link. --- */
