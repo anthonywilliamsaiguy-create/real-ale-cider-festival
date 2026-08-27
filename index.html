@@ -1432,6 +1432,8 @@ function renderRace(){
     if(cap) cap.textContent = "You're in " + myCrew() + ". Tapping another crew just peeks at their race — your drinks stay with yours.";
   } else {
     raceView = myCrewKey();
+    const cap0 = document.getElementById("crewcaption");
+    if(cap0) cap0.textContent = "";
   }
   /* crew name suggestions so nobody re-types a crew slightly differently */
   const dl = document.getElementById("crewlist");
