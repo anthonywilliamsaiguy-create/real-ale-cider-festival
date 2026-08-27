@@ -29,6 +29,8 @@
     --radius:14px;
   }
   *{box-sizing:border-box}
+  /* the hidden attribute must always win over any display rule below */
+  [hidden]{display:none !important}
   html,body{margin:0;padding:0}
   body{
     background:var(--bg);
