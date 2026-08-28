@@ -594,7 +594,7 @@
         <img id="qrimg" alt="QR code for this app">
         <p class="mut" id="applink" style="word-break:break-all"></p>
         <button class="btn ghost" id="copylinkbtn">🔗 Copy link</button>
-        <p class="mut">Scan the code, or send them the link — they just open it. No sign-in, no app store.</p>
+        <p class="mut">Scan the code or send the link — it puts them straight into your crew, they just add a name. No sign-in, no app store.</p>
       </div>
     </div>
     <div class="infocard">
@@ -627,7 +627,7 @@
 </nav>
 
 <script>
-const BUILD = 36;
+const BUILD = 37;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -958,6 +958,29 @@ function sessionKey(){ return state.sessionDay; }
   }
   delete state.soldOut;
 })();
+/* One-group-by-link: the share link and QR carry #crew=..., so anyone who
+   opens it lands straight in that crew - all they add is a name. */
+function applyCrewLink(){
+  try{
+    const m = (location.hash||"").match(/crew=([^&]+)/);
+    if(!m) return;
+    const c = cleanName(decodeURIComponent(m[1])).slice(0,24);
+    try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+    if(!c || crewKey(c) === crewKey(state.crew||"")) return;
+    state.crew = c;
+    state.crewOwner = (state.ownedCrews||[]).includes(crewKey(c));
+    state.crewLabels = state.crewLabels || {};
+    state.crewLabels[crewKey(c)] = c;
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+    /* pre-init these are TDZ/no-ops (init renders everything anyway); post-init they matter */
+    try{ raceView = myCrewKey(); }catch(e){}
+    try{ crewInput.value = state.crew; }catch(e){}
+    try{ refreshStats(); renderRace(); renderList(); scheduleSync(); }catch(e){}
+    setTimeout(()=>{ try{ showToast("🤝 You're in " + c + " — just add your name and you're racing."); }catch(e){} }, 600);
+  }catch(e){}
+}
+applyCrewLink();
+window.addEventListener("hashchange", applyCrewLink);
 function isSold(id){ return ((state.bar||{})[id]||{}).s === 1; }
 function isOff(id){ return ((state.bar||{})[id]||{}).s === 2; }
 function setBar(id, s){
@@ -1009,6 +1032,7 @@ function save(){
   }
   try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
   try{ refreshNameUi(); }catch(e){}
+  try{ refreshShareLink(); }catch(e){}
 }
 function entry(id){ return state.drinks[id] || {r:0, note:"", days:{}}; }
 function tEntry(id){ const e = entry(id); return (e.days && e.days[sessionKey()]) || {h:0, p:0}; }
@@ -1549,7 +1573,7 @@ document.getElementById("sharebtn").addEventListener("click", async ()=>{
   }
   const meR = myRider();
   const codeName = cleanName(state.name)||"Rider";
-  lines.push("", "📲 Get the app: " + location.href.split("#")[0]);
+  lines.push("", "📲 Get the app: " + appShareLink());
   lines.push("", `[ALE-RACE ${codeName}|${meR.day}|${meR.h}|${meR.u}|${meR.last||""}|${(meR.b||[]).join(",")}|${meR.c||""}]`);
   const revItems = Object.entries(meR.reviews||{}).map(([id,rv])=>`${id}:${rv.r||0}:${encodeURIComponent(rv.note||"")}`);
   if(revItems.length) lines.push(`[ALE-NOTES ${codeName}|${revItems.join("|")}]`);
@@ -2842,15 +2866,27 @@ document.querySelectorAll(".navbtn").forEach(b=>{
   b.addEventListener("click", ()=>{ showTab(b.dataset.panel); window.scrollTo({top:0}); });
 });
 
-/* ================= share link + QR ================= */
-(function(){
-  const url = location.href.split("#")[0];
+/* ================= share link + QR (carries your crew) ================= */
+function appShareLink(){
+  const base = location.href.split("#")[0].split("?")[0];
+  const c = myCrew();
+  return crewKey(c) === "festival" ? base : base + "#crew=" + encodeURIComponent(c);
+}
+function refreshShareLink(){
+  const url = appShareLink();
   const el = document.getElementById("applink");
-  if(el) el.textContent = url;
+  if(el && el.textContent !== url) el.textContent = url;
   const img = document.getElementById("qrimg");
-  if(img) img.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=" + encodeURIComponent(url);
+  if(img){
+    const src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=" + encodeURIComponent(url);
+    if(img.src !== src) img.src = src;
+  }
+}
+(function(){
+  refreshShareLink();
   const btn = document.getElementById("copylinkbtn");
   if(btn) btn.addEventListener("click", async ()=>{
+    const url = appShareLink();
     try{
       if(navigator.share){ await navigator.share({title:"Real Ale & Cider Festival", url}); return; }
       await navigator.clipboard.writeText(url);
