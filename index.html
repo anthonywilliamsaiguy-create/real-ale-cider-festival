@@ -627,7 +627,7 @@
 </nav>
 
 <script>
-const BUILD = 35;
+const BUILD = 36;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -638,7 +638,7 @@ const BUILD = 35;
 const ROASTS = {
   jack: {
     display: "Jack",
-    alts: ["jack","jacko","jacky"],
+    alts: ["jack","jacko","jacky","hickson"],
     /* while the field drinks and he's nowhere to be seen */
     watch: [
       "Race update: still no sign of {name}. Probably at home counting his round money.",
@@ -714,7 +714,7 @@ const ROASTS = {
   },
   luke: {
     display: "Luke",
-    alts: ["luke","lukey"],
+    alts: ["luke","lukey","tibble"],
     watch: [
       "No Luke yet. Probably 'just out on a quick 10k'. He'll tell you about it when he gets here.",
       "Luke Watch: still warming up somewhere, presumably.",
@@ -1774,6 +1774,7 @@ const SNUG_CATS = {
   riddle:{chip:"Riddles",       tag:"RIDDLE",        col:"#4C7A3A"},
   origin:{chip:"True or myth?", tag:"TRUE OR MYTH?", col:"#7A4CB8"},
   joke:  {chip:"Jokes",         tag:"GROANER",       col:"#B23B4B"},
+  mates: {chip:"Who said it?",  tag:"WHO SAID IT?",  col:"#3D7A8C"},
   fest:  {chip:"This festival", tag:"THIS FESTIVAL", col:"#8A6A1F"},
 };
 const MATS_SRC = {
@@ -1916,6 +1917,10 @@ joke: [
 ["Why don't crabs give to charity?","They're shellfish."],
 ["I used to be a banker.","But I lost interest."],
 ],
+/* who-said-it: real posts harvested from the lads' own Facebook pages.
+   [quote shown on the front, answer on the back] — first names only. */
+mates: [
+],
 };
 /* cards about tonight's actual list — computed from the data, so always true */
 function festMats(){
@@ -1970,6 +1975,7 @@ function allMats(){
   for(const [f,b] of MATS_SRC.riddle) out.push({cat:"riddle", f, b});
   for(const [f,v,b] of MATS_SRC.origin) out.push({cat:"origin", f, v, b});
   for(const [f,b] of MATS_SRC.joke) out.push({cat:"joke", f, b});
+  for(const [f,b] of (MATS_SRC.mates||[])) out.push({cat:"mates", f, b});
   out.push(...festMats());
   for(const m of out) m.id = m.cat+":"+matId(m.f);
   MATS_ALL = out;
@@ -2013,7 +2019,8 @@ function renderSnug(fresh){
   if(!mat) return;
   const chips = document.getElementById("snugchips");
   chips.innerHTML = `<button class="chip${s.filter==="all"?" on":""}" data-mcat="all">🎲 Pot luck</button>` +
-    Object.entries(SNUG_CATS).map(([k,c])=>`<button class="chip${s.filter===k?" on":""}" data-mcat="${k}">${c.chip}</button>`).join("");
+    Object.entries(SNUG_CATS).filter(([k])=>allMats().some(m=>m.cat===k))
+      .map(([k,c])=>`<button class="chip${s.filter===k?" on":""}" data-mcat="${k}">${c.chip}</button>`).join("");
   const m = curMat();
   if(!m){ dealMat(); return; }
   const C = SNUG_CATS[m.cat];
@@ -2816,7 +2823,7 @@ setTimeout(checkForUpdate, 4000);
 /* --- reconnect the live board whenever the app comes back to the front --- */
 document.addEventListener("visibilitychange", ()=>{
   if(document.hidden){ saveUi(); }
-  else { pullHistory(); startLive(); checkForUpdate(); }
+  else { maybeRollDay(); pullHistory(); startLive(); checkForUpdate(); }
 });
 window.addEventListener("online", ()=>{ pullHistory(); startLive(); scheduleSync(); });
 
@@ -2865,6 +2872,21 @@ checkBadges();
 refreshNameUi();
 pullHistory();
 startLive();
+/* Phones used to carry yesterday's session forever until someone found the
+   New-session button - which silently split the race boards by date. Roll to
+   today automatically, unless the last drink was under 6h ago (that's a
+   past-midnight session still running, which must keep going). */
+function maybeRollDay(){
+  try{
+    const today = new Date().toLocaleDateString("en-CA");
+    if(dayDate(sessionKey()) >= today) return;
+    const last = state.lastLogAt || 0;
+    if(last && Date.now() - last < 6*3600*1000) return;
+    startNewDay();
+    showToast("🌅 New festival day — fresh board for today. Ratings, notes and trophies carry over.", {ms:6000});
+  }catch(e){}
+}
+maybeRollDay();
 /* nav badge for the snug + the roast watch (pre-arrival lines need a clock, not just sync events) */
 (function(){
   const s = ensureSnug();

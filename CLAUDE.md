@@ -78,6 +78,13 @@ never read as permission to drive. Hidden at 0 units.
   once saved a crew per letter typed ("t", "th", "the"...). Commit on the button.
 - **Test against a returning user's saved state**, not just a fresh install.
   Several bugs only appeared for someone with older localStorage.
+- **Race boards split silently by session date.** Riders only race together
+  when `dayDate(sessionDay)` matches, and phones used to keep yesterday's
+  date until someone found New session (bit us Sat morning at the hall -
+  fresh installs raced alone while older phones sat on Friday's board).
+  Since build 36 `maybeRollDay()` rolls to today on open/foreground unless
+  the last drink was under 6h ago (a past-midnight session keeps running -
+  that part is still deliberate).
 - Riders are keyed by a per-device id, deduped by name (newest wins).
 - Crew matching is loose (`crewKey`) so "The Lads" and "the lads " are one crew.
 
