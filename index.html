@@ -166,6 +166,7 @@
     padding:8px 16px;font-size:17px;cursor:pointer;line-height:1;
   }
   .thumb.up.on{background:#2E4023;border-color:var(--good)}
+  .thumb.meh.on{background:#3A3225;border-color:#C9B48A}
   .thumb.down.on{background:#46231F;border-color:var(--bad)}
   .notewrap{display:grid;gap:5px}
   .notewrap label{font-size:13px;font-weight:700;color:var(--muted)}
@@ -627,7 +628,7 @@
 </nav>
 
 <script>
-const BUILD = 40;
+const BUILD = 41;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -1219,10 +1220,10 @@ function cardHTML(d){
         <span class="cname">${d.no}. ${d.name}</span>
         <span class="cbrew" style="display:block">${d.brew}</span>
         <span class="tagrow">${tags.join("")}</span>
-        ${mates.length?`<span class="matesline">${mates.slice(0,3).map(m=>`<span style="color:${nameColor(m.n)}">${esc(m.n)}</span>${m.r===1?" 👍":m.r===-1?" 👎":" 💬"}`).join(" · ")}${mates.length>3?` · +${mates.length-3} more`:""}</span>`:""}
+        ${mates.length?`<span class="matesline">${mates.slice(0,3).map(m=>`<span style="color:${nameColor(m.n)}">${esc(m.n)}</span>${m.r===1?" 👍":m.r===2?" 😐":m.r===-1?" 👎":" 💬"}`).join(" · ")}${mates.length>3?` · +${mates.length-3} more`:""}</span>`:""}
       </span>
       <span class="cright">
-        <span class="verdict" data-role="verdict">${e.r===1?"👍":e.r===-1?"👎":""}</span>
+        <span class="verdict" data-role="verdict">${vEmoji(e.r)}</span>
         <span class="tally" data-role="tally">${tallyText(t)}</span>
         <span class="chev">▾</span>
       </span>
@@ -1230,7 +1231,7 @@ function cardHTML(d){
     <p class="cdesc">${d.desc}</p>
     <div class="cbody"><div>
       <div class="controls">
-        ${mates.length?`<div class="matenotes">${mates.map(m=>`<div class="matenote"><span style="color:${nameColor(m.n)};font-weight:800">${esc(m.n)}</span>${m.own?"":` <span class="crewtag">${esc(m.crew)}</span>`} ${m.r===1?"👍":m.r===-1?"👎":""}${m.note?` <span class="mq">“${esc(m.note)}”</span>`:""}</div>`).join("")}</div>`:""}
+        ${mates.length?`<div class="matenotes">${mates.map(m=>`<div class="matenote"><span style="color:${nameColor(m.n)};font-weight:800">${esc(m.n)}</span>${m.own?"":` <span class="crewtag">${esc(m.crew)}</span>`} ${vEmoji(m.r)}${m.note?` <span class="mq">“${esc(m.note)}”</span>`:""}</div>`).join("")}</div>`:""}
         ${otherDayHalves(d.id)>0?`<div class="prevday">You had this on an earlier day (${otherDayHalves(d.id)} ${otherDayHalves(d.id)===1?"half":"halves"}-worth)</div>`:""}
         <div class="ctlrow">
           <span class="lbl">Halves today</span>
@@ -1252,6 +1253,7 @@ function cardHTML(d){
           <span class="lbl">Verdict</span>
           <span class="thumbs">
             <button class="thumb up${e.r===1?" on":""}" data-act="up" data-id="${d.id}" aria-label="Thumbs up ${d.name}">👍</button>
+            <button class="thumb meh${e.r===2?" on":""}" data-act="meh" data-id="${d.id}" aria-label="Middling verdict on ${d.name}">😐</button>
             <button class="thumb down${e.r===-1?" on":""}" data-act="down" data-id="${d.id}" aria-label="Thumbs down ${d.name}">👎</button>
           </span>
         </div>
@@ -1434,6 +1436,7 @@ listEl.addEventListener("click", e=>{
     case "p+": t.p = Math.min(99, t.p+1); state.lastDrink = id; state.lastLogAt = Date.now(); break;
     case "p-": t.p = Math.max(0, t.p-1); break;
     case "up": upd.r = en.r===1 ? 0 : 1; break;
+    case "meh": upd.r = en.r===2 ? 0 : 2; break;
     case "down": upd.r = en.r===-1 ? 0 : -1; break;
   }
   upd.days[dk] = t;
@@ -1477,12 +1480,13 @@ function refreshCard(id, skipControls){
   const t = tEntry(id);
   const tried = !!(hasAnyCount(e)||e.r||e.note);
   card.classList.toggle("tried", tried);
-  card.querySelector('[data-role="verdict"]').textContent = e.r===1?"👍":e.r===-1?"👎":"";
+  card.querySelector('[data-role="verdict"]').textContent = vEmoji(e.r);
   card.querySelector('[data-role="tally"]').textContent = tallyText(t);
   if(!skipControls){
     card.querySelector('[data-role="hval"]').textContent = t.h;
     card.querySelector('[data-role="pval"]').textContent = t.p;
     card.querySelector(".thumb.up").classList.toggle("on", e.r===1);
+    card.querySelector(".thumb.meh").classList.toggle("on", e.r===2);
     card.querySelector(".thumb.down").classList.toggle("on", e.r===-1);
   }
 }
@@ -1503,6 +1507,9 @@ function stats(){
   return {drinks, pints, units, halves, fulls};
 }
 function fmt(n){ return (Math.round(n*10)/10).toString().replace(/\.0$/,""); }
+/* verdicts: r = 1 up, 2 meh, -1 down, 0 none. Rank for sorting lists. */
+function vRank(r){ return r===1?3 : r===2?2 : r===-1?0 : 1; }
+function vEmoji(r){ return r===1?"👍" : r===2?"😐" : r===-1?"👎" : ""; }
 
 function refreshStats(){
   const s = stats();
@@ -1551,7 +1558,7 @@ function renderLog(){
   const items = Object.entries(state.drinks)
     .map(([id,e])=>({d:byId[id], e, t:tEntry(id), prev:otherDayHalves(id)}))
     .filter(x=>x.d && (x.t.h||x.t.p||x.e.r||x.e.note))
-    .sort((a,b)=>(b.e.r-a.e.r) || (a.d.id>b.d.id?1:-1));
+    .sort((a,b)=>(vRank(b.e.r)-vRank(a.e.r)) || (a.d.id>b.d.id?1:-1));
   if(!items.length){
     logEl.innerHTML = `<div class="empty">Nothing logged yet today.<br>Tap a drink on the Menu tab to get started. 🍻</div>`;
     return;
@@ -1564,7 +1571,7 @@ function renderLog(){
         <div class="logmeta">${d.brew} · ${d.abv.toFixed(1)}%${(t.h||t.p)?` · ${tallyText(t)}`:""}${prev>0?" · earlier day too":""}</div>
         ${e.note?`<div class="lognote">“${e.note.replace(/</g,"&lt;")}”</div>`:""}
       </div>
-      <div class="logv">${e.r===1?"👍":e.r===-1?"👎":""}</div>
+      <div class="logv">${vEmoji(e.r)}</div>
     </div>`).join("");
 }
 
@@ -1583,9 +1590,9 @@ document.getElementById("sharebtn").addEventListener("click", async ()=>{
     `${s.drinks} drinks · ${fmt(s.pints)} pints · ~${fmt(s.units)} units`, ``];
   const items = Object.entries(state.drinks).map(([id,e])=>({d:byId[id], e, t:tEntry(id)}))
     .filter(x=>x.d && (x.t.h||x.t.p||x.e.r||x.e.note))
-    .sort((a,b)=>b.e.r-a.e.r);
+    .sort((a,b)=>vRank(b.e.r)-vRank(a.e.r));
   for(const {d,e,t} of items){
-    const v = e.r===1?"👍":e.r===-1?"👎":"▫️";
+    const v = e.r===1?"👍":e.r===2?"😐":e.r===-1?"👎":"▫️";
     let l = `${v} ${d.name} (${d.brew}, ${d.abv.toFixed(1)}%)`;
     if(t.h||t.p) l += ` — ${[t.p?t.p+" pint"+(t.p>1?"s":""):"",t.h?t.h+" half"+(t.h>1?"ves":""):""].filter(Boolean).join(", ")}`;
     if(e.note) l += ` — “${e.note}”`;
@@ -2355,7 +2362,7 @@ function crewShowHTML(nameSet){
     const n = r.n || k;
     if(nameSet && !nameSet.has(n)) continue;
     for(const [id,rv] of Object.entries(r.reviews||{})){
-      if(!byId[id] || !rv.r) continue;
+      if(!byId[id] || (rv.r!==1 && rv.r!==-1)) continue;
       votes[id] = votes[id] || {up:[], down:[]};
       (rv.r===1 ? votes[id].up : votes[id].down).push(n);
     }
