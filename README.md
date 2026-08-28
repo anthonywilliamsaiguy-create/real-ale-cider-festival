@@ -10,8 +10,9 @@ No sign-in, no app store. Open the link, put a name in, start logging drinks.
 ## What it does
 
 - **Menu** - all 32 ciders, perries and fruit ciders plus 54 cask ales, with brewery,
-  ABV, county and tasting notes. Search, filter by style, sort by ABV, mark casks
-  sold out, and add drinks that aren't on the list.
+  ABV, county and tasting notes. Search, filter by style, sort by ABV, and add drinks
+  that aren't on the list. Mark casks sold out and tick which ciders are actually
+  on the bar - one person marks it and everyone's phones update.
 - **Track** - log halves and pints, rate drinks with a thumbs up or down, and jot
   tasting notes. Everything saves to your own phone.
 - **The Half-Pint Handicap** - every half pint moves your glass a furlong along a race

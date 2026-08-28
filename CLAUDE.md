@@ -52,6 +52,16 @@ version a phone is running.
   current state silently so nobody gets stale news. **Keep the roasts out of
   README.md** — the victims read that.
 
+## The shared bar map (sold out / what's on)
+
+The cider bar only has a subset out at once. `state.bar` is `{id:{s,t}}`
+(s: 0 on, 1 sold out, 2 not out yet) - it rides in every rider payload
+(seconds timestamps, capped to the 60 newest) and merges newest-wins in
+`ingest()`, so one person marking a cask sold or ticking the cider sheet
+updates every phone, including late joiners via the ntfy cache. The tick
+sheet is the apple button at the top of the Menu. Old per-phone
+`state.soldOut` marks migrate into the map on first load of build 33.
+
 ## Driving guide
 
 "🚗 Thinking of driving?" on My Night: earliest-drive estimate from
