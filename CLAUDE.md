@@ -30,22 +30,33 @@ reaches other people's phones.
 `BUILD` is a version number - bump it on each change so it is obvious which
 version a phone is running.
 
-## The Snug (beer mats) and the roasts
+## Beer mats (the "Bored?" tab) and the roasts
 
-- **The Snug** is the 5th tab: a deck of flip-over beer mats (trivia, riddles,
+- **Bored?** is the 5th tab: a deck of flip-over beer mats (trivia, riddles,
   "true or myth?" origins, jokes, plus cards computed live from the drinks
-  data). The deck is `MATS_SRC` / `festMats()` in the script; card ids are
-  hashes of the front text, so editing or adding cards never breaks anyone's
-  "seen" list. Per-phone no-repeat state lives in `state.snug`.
-- **`ROASTS`** (right under `BUILD`) is targeted banter for specific mates —
-  currently Jack (lightweight, never buys a round). Every phone watches the
-  live board and fires the same gags locally when his tally moves: pre-arrival
-  "Jack Watch" lines, a big first-drink toast (with real hours-late maths from
-  the `fs` field riders now publish), second-drink, then occasional digs, plus
-  race-commentary lines. Name match is whole-word ("Jack"/"jacko"/"Big Jack",
-  not "Jackie"). To add a victim, copy the block; to disarm, delete it.
-  A phone that joins late adopts the current state silently so nobody gets
-  stale news. **Keep the roasts out of README.md** — the victims read that.
+  data). Internally it is still called `snug` everywhere (panel id, state key,
+  function names) — only the labels changed when Anthony vetoed the name.
+  The deck is `MATS_SRC` / `festMats()` in the script; card ids are hashes of
+  the front text, so editing or adding cards never breaks anyone's "seen"
+  list. Per-phone no-repeat state lives in `state.snug`.
+- **`ROASTS`** (right under `BUILD`) is targeted banter for specific mates:
+  Jack (lightweight, tight with rounds), Ross (very tall), Luke (runner;
+  after a few he wants a booth at the Loft nightclub), Chris (tech guy, only
+  drinks Disaronno & coke) and Tony/Anthony himself (unemployed, built this
+  app with the free time). Every phone watches the live board and fires the
+  same gags locally as tallies move: pre-arrival watch lines, a first-drink
+  toast (real hours-late maths from the `fs` field riders publish), second
+  drink, occasional digs, plus race-commentary lines. Name match is
+  whole-word against `alts` ("Jack"/"jacko"/"Big Jack", not "Jackie"). Add a
+  victim: copy a block. Disarm: delete it. A phone that joins late adopts
+  current state silently so nobody gets stale news. **Keep the roasts out of
+  README.md** — the victims read that.
+
+## Driving guide
+
+"🚗 Thinking of driving?" on My Night: earliest-drive estimate from
+`state.lastLogAt` + 1h + 1h/unit. Deliberately cautious wording — it must
+never read as permission to drive. Hidden at 0 units.
 
 ## Things that bit us (don't regress these)
 

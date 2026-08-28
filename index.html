@@ -527,8 +527,14 @@
       <div class="stat"><div class="n" id="st-pints">0</div><div class="l">Pints today</div></div>
       <div class="stat"><div class="n" id="st-units">0</div><div class="l">Units today</div></div>
     </div>
+    <p class="counts" id="pintbreak" style="margin-top:-8px"></p>
     <p class="counts" style="margin-top:-4px">Tallies keep running (even past midnight) until you tap New session — ratings and notes always carry over.</p>
     <p class="counts" id="triedline" style="margin-top:-6px"></p>
+    <div class="infocard" id="drivecard" style="margin:4px 0 14px" hidden>
+      <h3>🚗 Thinking of driving?</h3>
+      <p id="driveline"></p>
+      <p class="mut">Rough maths only — about an hour per unit after your last drink, plus an hour while it peaks. Everyone clears it at a different speed, and being under the limit isn't the same as being safe. Driving tonight? The only safe amount is zero — soft drinks are free for designated drivers.</p>
+    </div>
     <div class="btnrow">
       <button id="sharebtn" class="btn">Share my tally</button>
       <button id="newdaybtn" class="btn ghost">🌅 New session</button>
@@ -546,7 +552,7 @@
   <!-- ============ THE SNUG PANEL ============ -->
   <section id="panel-snug" class="panel">
     <div class="racehead">
-      <h2 class="racetitle">The Snug</h2>
+      <h2 class="racetitle">Bored, are we?</h2>
       <p class="racesub">Beer mats for the table — pub trivia, proper riddles, dodgy phrase origins and certified groaners. Deal one, read it out, let the table argue, then flip it over. 🎴</p>
     </div>
     <div class="chips" id="snugchips" style="margin-top:12px"></div>
@@ -580,7 +586,7 @@
       <p class="mut"><strong>Logging drinks.</strong> Tap a drink, add halves or pints, give it a 👍 or 👎 and jot a note. Numbers match the festival programme, so you can just tell the bar the number. Stuck for a choice? Tap 🎲.</p>
       <p class="mut"><strong>Your crew.</strong> You're in one crew at a time. Everyone in it sees each other's pints, ratings and notes, live. On the Race tab you can tap another crew's name to peek at their race — that doesn't move you, it's just a look. Tasting notes are shared with everyone at the festival, whatever crew they're in, so you get the benefit of the whole room's opinion.</p>
       <p class="mut"><strong>The race.</strong> Every half pint moves your glass a furlong. It runs all night and only resets when you tap <em>New session</em> on your own phone. Ratings, notes and trophies always carry over.</p>
-      <p class="mut"><strong>The Snug.</strong> Beer mats for the table — trivia, riddles, phrase origins and groaners. Deal one, read it out, let the table argue, flip it for the answer. The deck won't repeat itself until you've been through the lot.</p>
+      <p class="mut"><strong>Bored?</strong> That tab is beer mats for the table — trivia, riddles, phrase origins and groaners. Deal one, read it out, let the table argue, flip it for the answer. The deck won't repeat itself until you've been through the lot.</p>
       <p class="mut"><strong>If the signal drops</strong> everything keeps working on your phone and syncs when you're back. Cask run dry? Open it and tap <em>Mark sold out</em>. Something not listed? Add it at the bottom of the menu.</p>
     </div>
     <div class="infocard">
@@ -597,14 +603,14 @@
   <div class="navin">
     <button class="navbtn on" data-panel="menu"><span class="ic">🍺</span>Menu<span class="navbadge" id="nb-menu">86 drinks</span></button>
     <button class="navbtn" data-panel="race"><span class="ic">🏇</span>Race<span class="navbadge" id="nb-race">no runners</span></button>
-    <button class="navbtn" data-panel="snug"><span class="ic">🎴</span>Snug<span class="navbadge" id="nb-snug">beer mats</span></button>
+    <button class="navbtn" data-panel="snug"><span class="ic">🎴</span>Bored?<span class="navbadge" id="nb-snug">beer mats</span></button>
     <button class="navbtn" data-panel="night"><span class="ic">📝</span>My Night<span class="navbadge" id="nb-night">nothing yet</span></button>
     <button class="navbtn" data-panel="info"><span class="ic">ℹ️</span>Info<span class="navbadge">&nbsp;</span></button>
   </div>
 </nav>
 
 <script>
-const BUILD = 31;
+const BUILD = 32;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -655,6 +661,132 @@ const ROASTS = {
     needle: [
       "{name} is {tally} in. His round remains theoretical.",
       "{tally} for {name}, and the wallet's not been seen since Wednesday.",
+    ],
+  },
+  ross: {
+    display: "Ross",
+    alts: ["ross","rossco"],
+    watch: [
+      "No sign of Ross yet — which is odd, because you can normally see him from two postcodes away.",
+      "Ross Watch: nothing on the horizon. And he IS the horizon.",
+    ],
+    first: [
+      "Ross has logged his first! The beer's got a long way down — allow extra time.",
+      "Ross is off the mark. Ceiling fans switched off as a precaution.",
+      "First for Ross — poured at ground level, drunk at altitude.",
+    ],
+    second: [
+      "Two for Ross. The air's thinner up there — it hits different.",
+      "Ross logs a second. Sherpa reportedly booked for the walk home.",
+    ],
+    later: [
+      "{tally} for {name}. Takes a while to reach sea level from that height.",
+      "{name} is {tally} in and still the best view in the hall. Of the hall.",
+      "{tally} down for {name} — spotters report the top half is drunker than the bottom.",
+    ],
+    self: [
+      "Evening, {name}. Mind the door frame. And the next one.",
+    ],
+    paddock: [
+      "{name} is here and drinkless. Odd — he can see the bar from anywhere in the building.",
+    ],
+    needle: [
+      "{name} at {tally}. Long way down, those.",
+      "{name}: {tally} in, head still in the rafters.",
+    ],
+  },
+  luke: {
+    display: "Luke",
+    alts: ["luke","lukey"],
+    watch: [
+      "No Luke yet. Probably 'just out on a quick 10k'. He'll tell you about it when he gets here.",
+      "Luke Watch: still warming up somewhere, presumably.",
+    ],
+    first: [
+      "Luke's off the mark! Carb loading, technically.",
+      "First for Luke — he'll log this one as 'recovery fuel'.",
+    ],
+    second: [
+      "Two in for Luke. Roughly three away from 'lads… Loft?'",
+      "Luke logs a second — negative splits, this is where he speeds up.",
+    ],
+    later: [
+      "{tally} for {name}. Loft proposals expected any minute now.",
+      "{name} is {tally} deep — someone hide his phone before he books a booth at the Loft.",
+      "{tally} in and {name}'s eyeing the door. The Loft isn't even open yet, mate. Sit down.",
+      "{name} at {tally}. In his head he's already in the booth.",
+    ],
+    self: [
+      "Evening, {name}. This counts as intervals if you drink it fast. And no — we're not going to the Loft.",
+    ],
+    paddock: [
+      "{name}: present, hydrating responsibly. Give it an hour.",
+    ],
+    needle: [
+      "{name} at {tally} — pacing it like a race. The Loft is the finish line, apparently.",
+      "{tally} for {name}. The booth fund is building nicely.",
+    ],
+  },
+  chris: {
+    display: "Chris",
+    alts: ["chris","bryant"],
+    watch: [
+      "No sign of Chris. Probably still reading this app's source code.",
+      "Chris Watch: nothing yet. There's no Disaronno on the list and he knows it.",
+    ],
+    first: [
+      "🚨 Chris has logged a drink at a REAL ALE festival! Stewards are checking it's not smuggled Disaronno.",
+      "Chris is off the mark with an actual beer. Character development, live.",
+    ],
+    second: [
+      "Two for Chris, neither of them amaretto. Who even is this man?",
+      "Chris logs a second. The Disaronno era may finally be over.",
+    ],
+    later: [
+      "{tally} for {name} and not a Disaronno in sight. Growth.",
+      "{name} is {tally} in — deploy complete, no rollback.",
+      "{tally} down for {name}. He's rated the beers AND the app's code by now.",
+    ],
+    self: [
+      "Evening, {name}. Yes, the sync is ntfy over EventSource. No, you can't refactor it. Pick a beer.",
+    ],
+    paddock: [
+      "{name} is on the board but drinkless — presumably asked for a Disaronno and coke and got laughed out of the queue.",
+    ],
+    needle: [
+      "{name} at {tally}. Currently pen-testing the bar queue.",
+      "{tally} for {name} — running it all through a spreadsheet, no doubt.",
+    ],
+  },
+  tony: {
+    display: "Tony",
+    alts: ["tony","anthony","ant"],
+    watch: [
+      "No Tony yet — probably at home adding a feature nobody asked for.",
+      "Tony Watch: he's free most days, to be fair. He'll be here.",
+    ],
+    first: [
+      "Tony's underway! He built a whole app for this festival — least he could do is use it.",
+      "First for Tony. Plenty of leave left, what with the not-having-a-job.",
+    ],
+    second: [
+      "Two for Tony. He can afford it — time-wise, anyway.",
+    ],
+    later: [
+      "{tally} for {name}. Built this app 'between opportunities'. It shows. In a good way. Mostly.",
+      "{name} is {tally} in and still checking the live sync like it's the stock market.",
+      "{tally} down for {name} — the job hunt resumes Monday. A Monday. Some Monday.",
+    ],
+    self: [
+      "Evening, boss. The app salutes its creator. It's not like you're busy tomorrow.",
+      "The developer has entered the chat. Between opportunities, never between pints.",
+    ],
+    paddock: [
+      "{name}: nought drinks, fourteen app tweaks.",
+    ],
+    needle: [
+      "{name} at {tally} — 'testing the app thoroughly', he calls it.",
+      "{tally} for {name}. All that free time and he still can't catch the leader.",
     ],
   },
 };
@@ -1135,9 +1267,9 @@ listEl.addEventListener("click", e=>{
   const dk = sessionKey();
   const t = {...(upd.days[dk]||{h:0,p:0})};
   switch(btn.dataset.act){
-    case "h+": t.h = Math.min(99, t.h+1); state.lastDrink = id; break;
+    case "h+": t.h = Math.min(99, t.h+1); state.lastDrink = id; state.lastLogAt = Date.now(); break;
     case "h-": t.h = Math.max(0, t.h-1); break;
-    case "p+": t.p = Math.min(99, t.p+1); state.lastDrink = id; break;
+    case "p+": t.p = Math.min(99, t.p+1); state.lastDrink = id; state.lastLogAt = Date.now(); break;
     case "p-": t.p = Math.max(0, t.p-1); break;
     case "up": upd.r = en.r===1 ? 0 : 1; break;
     case "down": upd.r = en.r===-1 ? 0 : -1; break;
@@ -1195,16 +1327,18 @@ function refreshCard(id, skipControls){
 
 /* ================= MY NIGHT ================= */
 function stats(){
-  let drinks=0, pints=0, units=0;
+  let drinks=0, pints=0, units=0, halves=0, fulls=0;
   const dk = sessionKey();
   for(const [id,e] of Object.entries(state.drinks)){
     const d = byId[id]; if(!d) continue;
     const t = (e.days||{})[dk] || {h:0,p:0};
     if(t.h||t.p){ drinks++; }
+    halves += (t.h||0);
+    fulls += (t.p||0);
     pints += (t.p||0) + (t.h||0)*0.5;
     units += ((t.h||0)*0.284 + (t.p||0)*0.568) * d.abv;
   }
-  return {drinks, pints, units};
+  return {drinks, pints, units, halves, fulls};
 }
 function fmt(n){ return (Math.round(n*10)/10).toString().replace(/\.0$/,""); }
 
@@ -1213,6 +1347,33 @@ function refreshStats(){
   document.getElementById("st-drinks").textContent = s.drinks;
   document.getElementById("st-pints").textContent = fmt(s.pints);
   document.getElementById("st-units").textContent = fmt(s.units);
+  /* spell the pints out so the total is checkable at a glance */
+  const pb = document.getElementById("pintbreak");
+  if(pb){
+    const bits = [];
+    if(s.halves) bits.push(s.halves + (s.halves===1?" half":" halves"));
+    if(s.fulls) bits.push(s.fulls + (s.fulls===1?" pint":" pints"));
+    pb.textContent = bits.length ? "That's " + bits.join(" and ") + " logged. Tapped a half that was really a pint? Fix it on the drink's card." : "";
+  }
+  /* the sober-clock: a deliberately cautious guide, never a green light */
+  const dc = document.getElementById("drivecard");
+  if(dc){
+    if(s.units > 0){
+      dc.hidden = false;
+      const last = state.lastLogAt || Date.now();
+      const readyAt = new Date(last + (1 + s.units) * 3600 * 1000);
+      const t = readyAt.toLocaleTimeString("en-GB", {hour:"numeric", minute:"2-digit"});
+      let day = "";
+      if(readyAt.toDateString() !== new Date().toDateString()){
+        const tom = new Date(Date.now() + 86400000);
+        day = readyAt.toDateString() === tom.toDateString() ? " tomorrow" : " on " + readyAt.toLocaleDateString("en-GB", {weekday:"long"});
+      }
+      document.getElementById("driveline").innerHTML =
+        `On roughly <strong>${fmt(s.units)} units</strong>, don't even think about driving before <strong>${t}${day}</strong> — and treat that as the bare minimum.`;
+    } else {
+      dc.hidden = true;
+    }
+  }
   document.getElementById("nb-night").textContent =
     s.drinks ? `${s.drinks} today · ${fmt(s.units)} units` : "nothing yet";
   const tried = Object.keys(state.drinks).filter(id=>{ const e = entry(id); return byId[id] && (hasAnyCount(e)||e.r); }).length;
@@ -1362,7 +1523,7 @@ const BADGES = [
   {id:"county",   e:"🗺️", name:"County Hopper",  hint:"Ciders from 4 different counties"},
   {id:"collector",e:"🎯", name:"The Collector",  hint:"Try 10 different drinks"},
   {id:"stayer",   e:"🐴", name:"The Stayer",     hint:"Go the distance: 5 pints in a day"},
-  {id:"mats",     e:"🎴", name:"Card Sharp",     hint:"Deal 30 beer mats in The Snug"},
+  {id:"mats",     e:"🎴", name:"Card Sharp",     hint:"Deal 30 beer mats"},
 ];
 const BADGE_BY_ID = Object.fromEntries(BADGES.map(b=>[b.id,b]));
 
@@ -1778,7 +1939,7 @@ function maybeOfferMat(){
   s.sinceMat += 1;
   if(s.sinceMat < 3){ save(); return; }
   s.sinceMat = 0; save();
-  showToast("🎴 While that settles — fresh beer mat in The Snug. Tap here.", {amber:true, ms:6000, tap:()=>{ showTab("snug"); dealMat(); window.scrollTo({top:0}); }});
+  showToast("🎴 While that settles — fresh beer mat waiting. Tap here.", {amber:true, ms:6000, tap:()=>{ showTab("snug"); dealMat(); window.scrollTo({top:0}); }});
 }
 
 /* ================= ROAST ENGINE =================
@@ -1803,9 +1964,14 @@ function roastKeyFor(name){
   return null;
 }
 function roastLine(pool, vars){
+  if(!pool || !pool.length) return "";
   let s = pool[Math.floor(Math.random()*pool.length)] || "";
   for(const [k,v] of Object.entries(vars||{})) s = s.split("{"+k+"}").join(v);
   return s;
+}
+function roastToast(pool, vars, ms){
+  const l = roastLine(pool, vars);
+  if(l) showToast(l, {amber:true, ms:ms||6000});
 }
 function checkRoasts(){
   const R = ensureRoastState();
@@ -1825,7 +1991,7 @@ function checkRoasts(){
   const selfK = roastKeyFor(state.name);
   if(selfK && me.h>0 && !R.selfDone){
     R.selfDone = true; dirty = true;
-    showToast(roastLine(ROASTS[selfK].self, {name:cleanName(state.name).split(" ").find(t=>roastKeyFor(t))||cleanName(state.name)}), {amber:true, ms:6500});
+    roastToast(ROASTS[selfK].self, {name:cleanName(state.name).split(" ").find(t=>roastKeyFor(t))||cleanName(state.name)}, 6500);
   }
   /* everyone else on the board */
   const now = Date.now();
@@ -1851,25 +2017,29 @@ function checkRoasts(){
           if(hrs >= 2) late = "Only " + hrs + " hours behind the field. ";
           else if(hrs >= 1) late = "An hour and change behind the field. ";
         }
-        showToast(roastLine(cfg.first, {name:nm, late}), {amber:true, ms:8000});
+        roastToast(cfg.first, {name:nm, late}, 8000);
       } else if(v.events === 2 && h <= 3){
-        showToast(roastLine(cfg.second, {name:nm}), {amber:true, ms:6500});
+        roastToast(cfg.second, {name:nm}, 6500);
       } else if(v.events % 2 === 1 && now - (R.laterLastAt||0) > 25*60*1000){
         R.laterLastAt = now;
-        showToast(roastLine(cfg.later, {name:nm, tally:pintsLabel(h)}), {amber:true, ms:6000});
+        roastToast(cfg.later, {name:nm, tally:pintsLabel(h)}, 6000);
       }
     }
   }
-  /* the pre-arrival watch: field's drinking, the marked man is nowhere */
+  /* the pre-arrival watch: field's drinking, a marked man is nowhere */
   if(R.fieldFirstAt && now - R.fieldFirstAt > 40*60*1000 && R.watchCount < 3 && now - (R.watchLastAt||0) > 45*60*1000){
-    for(const k of Object.keys(ROASTS)){
-      if(roastKeyFor(state.name) === k) continue;
+    const eligible = Object.keys(ROASTS).filter(k=>{
+      if(roastKeyFor(state.name) === k) return false;
+      if((ROASTS[k].watch||[]).length === 0) return false;
       const v = R.victims[k];
-      if(v && v.maxH > 0) continue;
-      if(riders.some(x=>roastKeyFor(x.n)===k && (x.h||0)>0)) continue;
+      if(v && v.maxH > 0) return false;
+      if(riders.some(x=>roastKeyFor(x.n)===k && (x.h||0)>0)) return false;
+      return true;
+    });
+    if(eligible.length){
+      const k = eligible[Math.floor(Math.random()*eligible.length)];
       R.watchCount++; R.watchLastAt = now; dirty = true;
-      showToast(roastLine(ROASTS[k].watch, {name:ROASTS[k].display||k}), {amber:true, ms:6500});
-      break;
+      roastToast(ROASTS[k].watch, {name:ROASTS[k].display||k}, 6500);
     }
   }
   if(dirty) save();
