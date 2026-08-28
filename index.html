@@ -627,7 +627,7 @@
 </nav>
 
 <script>
-const BUILD = 37;
+const BUILD = 38;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -2449,7 +2449,7 @@ function manageHTML(riders){
 function earlierHTML(list){
   if(!list.length) return "";
   const bits = list.slice().sort((a,b)=>b.h-a.h).map(r=>`${esc(r.name)} ${pintsLabel(r.h)}`).join(" · ");
-  return `<p class="counts" style="margin-top:14px">Earlier sessions, not in this one: ${bits}</p>`;
+  return `<p class="counts" style="margin-top:14px">Not on today's board yet — last raced an earlier session: ${bits}. They'll join today's race as soon as they open the app.</p>`;
 }
 
 /* --- LIVE SYNC: anonymous pub/sub. No accounts. Works for anyone with the link. --- */
