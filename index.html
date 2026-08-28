@@ -627,7 +627,7 @@
 </nav>
 
 <script>
-const BUILD = 39;
+const BUILD = 40;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -2937,8 +2937,26 @@ function maybeRollDay(){
     const today = new Date().toLocaleDateString("en-CA");
     if(dayDate(sessionKey()) >= today) return;
     const last = state.lastLogAt || 0;
-    if(last && Date.now() - last < 6*3600*1000) return;
+    const fresh = !!last && (Date.now() - last < 6*3600*1000);
+    /* recent logging only blocks the roll in the small hours - that's a genuine
+       past-midnight session. In the daytime a stale key means the phone missed
+       the rollover (old build / no signal) and drinks are landing on yesterday's
+       board - roll it, and carry those fresh drinks into today so nothing is lost. */
+    if(fresh && new Date().getHours() < 10) return;
+    const oldKey = sessionKey();
     startNewDay();
+    if(fresh){
+      const nk = sessionKey();
+      for(const e of Object.values(state.drinks||{})){
+        const c = e.days && e.days[oldKey];
+        if(c && ((c.h||0)||(c.p||0))){
+          const t = e.days[nk] || {h:0,p:0};
+          e.days[nk] = {h:(t.h||0)+(c.h||0), p:(t.p||0)+(c.p||0)};
+          delete e.days[oldKey];
+        }
+      }
+      save(); refreshStats(); renderList(); renderRace(); scheduleSync();
+    }
     showToast("🌅 New festival day — fresh board for today. Ratings, notes and trophies carry over.", {ms:6000});
   }catch(e){}
 }
@@ -2950,7 +2968,7 @@ maybeRollDay();
   if(nb && s.dealt) nb.textContent = s.dealt+" dealt";
 })();
 setTimeout(()=>{ try{ checkRoasts(); }catch(e){} }, 12000);
-setInterval(()=>{ try{ checkRoasts(); }catch(e){} }, 5*60*1000);
+setInterval(()=>{ try{ maybeRollDay(); }catch(e){} try{ checkRoasts(); }catch(e){} }, 5*60*1000);
 /* warn if this browser can't keep data between visits (private mode / some in-app browsers) */
 (function(){
   try{
