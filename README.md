@@ -16,8 +16,12 @@ No sign-in, no app store. Open the link, put a name in, start logging drinks.
   tasting notes. Everything saves to your own phone.
 - **The Half-Pint Handicap** - every half pint moves your glass a furlong along a race
   track. Live standings, race commentary and a crew-vs-crew scoreboard.
-- **Trophy Cabinet** - ten trophies for exploring: perries, stouts, counties,
-  tasting notes, going the distance.
+- **The Snug** - beer mats for the table: pub trivia, proper riddles, "true or myth?"
+  phrase origins, certified groaners and questions about this year's actual list.
+  Deal one, read it out, let the table argue, flip it over. The deck never repeats
+  until you've been through the lot.
+- **Trophy Cabinet** - eleven trophies for exploring: perries, stouts, counties,
+  tasting notes, going the distance, dealing beer mats.
 - **Crews** - create a crew or join one that's already going. Notes and Best in Show
   stay within your crew.
 

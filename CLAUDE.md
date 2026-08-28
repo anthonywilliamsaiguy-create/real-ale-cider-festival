@@ -30,6 +30,23 @@ reaches other people's phones.
 `BUILD` is a version number - bump it on each change so it is obvious which
 version a phone is running.
 
+## The Snug (beer mats) and the roasts
+
+- **The Snug** is the 5th tab: a deck of flip-over beer mats (trivia, riddles,
+  "true or myth?" origins, jokes, plus cards computed live from the drinks
+  data). The deck is `MATS_SRC` / `festMats()` in the script; card ids are
+  hashes of the front text, so editing or adding cards never breaks anyone's
+  "seen" list. Per-phone no-repeat state lives in `state.snug`.
+- **`ROASTS`** (right under `BUILD`) is targeted banter for specific mates —
+  currently Jack (lightweight, never buys a round). Every phone watches the
+  live board and fires the same gags locally when his tally moves: pre-arrival
+  "Jack Watch" lines, a big first-drink toast (with real hours-late maths from
+  the `fs` field riders now publish), second-drink, then occasional digs, plus
+  race-commentary lines. Name match is whole-word ("Jack"/"jacko"/"Big Jack",
+  not "Jackie"). To add a victim, copy the block; to disarm, delete it.
+  A phone that joins late adopts the current state silently so nobody gets
+  stale news. **Keep the roasts out of README.md** — the victims read that.
+
 ## Things that bit us (don't regress these)
 
 - **Never style an element that uses the `hidden` attribute with `display:...`**

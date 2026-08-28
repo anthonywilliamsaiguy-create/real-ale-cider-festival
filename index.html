@@ -365,6 +365,41 @@
   .donebtn{width:100%;padding:10px 14px;font-size:14px}
   .card.flash{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent);transition:box-shadow .3s,border-color .3s}
 
+  /* ---------- the snug: beer mats ---------- */
+  .matwrap{perspective:1200px;margin:14px 0 12px}
+  .matwrap.dealt{animation:matdeal .38s ease}
+  @keyframes matdeal{from{transform:translateY(14px) rotate(-1deg);opacity:0}to{transform:none;opacity:1}}
+  .mat{
+    display:grid;width:100%;background:none;border:none;padding:0;cursor:pointer;
+    font:inherit;color:inherit;text-align:center;
+    transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,.7,.35,1.08);
+  }
+  .mat.flip{transform:rotateY(180deg)}
+  .matface{
+    grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    background:#F4EAD7;color:#2A1C08;border:3px solid #3A2B18;border-radius:20px;
+    box-shadow:0 8px 26px rgba(0,0,0,.5);
+    display:grid;align-content:center;justify-items:center;gap:12px;
+    padding:30px 22px;min-height:250px;position:relative;overflow:hidden;
+  }
+  .matface::after{
+    content:"";position:absolute;inset:9px;border:2px dashed rgba(58,43,24,.22);
+    border-radius:13px;pointer-events:none;
+  }
+  .matface.back{transform:rotateY(180deg);background:#EFE0C2}
+  .mattag{
+    font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+    border-radius:999px;padding:3px 12px;color:#F4EAD7;
+  }
+  .matmain{font-weight:800;font-size:19px;line-height:1.4;max-width:46ch}
+  .matmain.longer{font-size:16.5px;font-weight:700}
+  .matverdict{font-family:'Bevan',Georgia,serif;font-size:22px;letter-spacing:.04em;line-height:1.1}
+  .matsub{font-size:14.5px;line-height:1.5;color:#4A3A24;max-width:48ch}
+  .mathint{font-size:11px;font-weight:700;color:#8A7047;letter-spacing:.1em;text-transform:uppercase}
+  .toast.amber{background:#4A3A1A;border-color:var(--accent);color:#F5E5C0}
+  .toast.tap{pointer-events:auto;cursor:pointer}
+  @media (prefers-reduced-motion:reduce){ .mat{transition:none} .matwrap.dealt{animation:none} }
+
   /* ---------- trophies, toasts, best in show ---------- */
   .sbadges{font-size:13px;letter-spacing:1px;font-weight:400}
   .tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
@@ -508,6 +543,20 @@
     </div>
   </section>
 
+  <!-- ============ THE SNUG PANEL ============ -->
+  <section id="panel-snug" class="panel">
+    <div class="racehead">
+      <h2 class="racetitle">The Snug</h2>
+      <p class="racesub">Beer mats for the table — pub trivia, proper riddles, dodgy phrase origins and certified groaners. Deal one, read it out, let the table argue, then flip it over. 🎴</p>
+    </div>
+    <div class="chips" id="snugchips" style="margin-top:12px"></div>
+    <div class="matwrap" id="matwrap">
+      <button class="mat" id="mat" aria-label="Beer mat — tap to turn it over"></button>
+    </div>
+    <button class="btn" id="dealbtn" style="width:100%">🎲 Deal another mat</button>
+    <p class="counts" id="snugcounts" style="text-align:center;margin-top:10px"></p>
+  </section>
+
   <!-- ============ INFO PANEL ============ -->
   <section id="panel-info" class="panel">
     <div class="infocard">
@@ -531,6 +580,7 @@
       <p class="mut"><strong>Logging drinks.</strong> Tap a drink, add halves or pints, give it a 👍 or 👎 and jot a note. Numbers match the festival programme, so you can just tell the bar the number. Stuck for a choice? Tap 🎲.</p>
       <p class="mut"><strong>Your crew.</strong> You're in one crew at a time. Everyone in it sees each other's pints, ratings and notes, live. On the Race tab you can tap another crew's name to peek at their race — that doesn't move you, it's just a look. Tasting notes are shared with everyone at the festival, whatever crew they're in, so you get the benefit of the whole room's opinion.</p>
       <p class="mut"><strong>The race.</strong> Every half pint moves your glass a furlong. It runs all night and only resets when you tap <em>New session</em> on your own phone. Ratings, notes and trophies always carry over.</p>
+      <p class="mut"><strong>The Snug.</strong> Beer mats for the table — trivia, riddles, phrase origins and groaners. Deal one, read it out, let the table argue, flip it for the answer. The deck won't repeat itself until you've been through the lot.</p>
       <p class="mut"><strong>If the signal drops</strong> everything keeps working on your phone and syncs when you're back. Cask run dry? Open it and tap <em>Mark sold out</em>. Something not listed? Add it at the bottom of the menu.</p>
     </div>
     <div class="infocard">
@@ -547,13 +597,67 @@
   <div class="navin">
     <button class="navbtn on" data-panel="menu"><span class="ic">🍺</span>Menu<span class="navbadge" id="nb-menu">86 drinks</span></button>
     <button class="navbtn" data-panel="race"><span class="ic">🏇</span>Race<span class="navbadge" id="nb-race">no runners</span></button>
+    <button class="navbtn" data-panel="snug"><span class="ic">🎴</span>Snug<span class="navbadge" id="nb-snug">beer mats</span></button>
     <button class="navbtn" data-panel="night"><span class="ic">📝</span>My Night<span class="navbadge" id="nb-night">nothing yet</span></button>
     <button class="navbtn" data-panel="info"><span class="ic">ℹ️</span>Info<span class="navbadge">&nbsp;</span></button>
   </div>
 </nav>
 
 <script>
-const BUILD = 30;
+const BUILD = 31;
+
+/* ================= ROASTS =================
+   Gentle, targeted stick for specific mates, delivered by toasts and the race
+   commentary on EVERYONE'S phones at the right moments. Matching is by rider
+   name, whole word, case-blind — "Jack", "jacko", "Big Jack" all count, but
+   "Jackie" doesn't. Add a victim: copy the block, change key/alts/lines.
+   Delete a block to disarm it. {name} {late} {tally} get filled in. */
+const ROASTS = {
+  jack: {
+    display: "Jack",
+    alts: ["jack","jacko","jacky"],
+    /* while the field drinks and he's nowhere to be seen */
+    watch: [
+      "Race update: still no sign of {name}. Probably at home counting his round money.",
+      "The {name} Watch continues. The beer is quite safe.",
+      "No {name} yet. Understandable — rounds don't dodge themselves.",
+      "Stewards confirm {name} has still not reached the paddock. The bar staff may stand easy.",
+    ],
+    /* the big one: his first logged drink, seen live on everyone's phones */
+    first: [
+      "🚨 STOP THE PRESSES — {name} has logged a drink! {late}Bought by someone else, presumably.",
+      "🚨 He's HERE. {name} is off the mark! {late}The bar's been told to expect no further orders for an hour.",
+      "🚨 Confirmed sighting: {name}, drink in hand. {late}Witnesses did not see him pay.",
+    ],
+    second: [
+      "{name} is on his SECOND. Approaching the personal limit — medics are on standby.",
+      "Two for {name}! Somebody film it — no one at home will believe this.",
+      "{name} logs a second. Steady on, son — think of the tolerance you haven't got.",
+    ],
+    /* an occasional dig as the night goes on */
+    later: [
+      "{tally} in for {name}. Wallet still in mint, unopened condition.",
+      "{name} is {tally} deep and somehow it's still never been his round.",
+      "{tally} for {name}. At this rate he'll get a round in by the 30th festival.",
+      "{name}: {tally} down. Lightweight AND tight — the complete package, our {name}.",
+    ],
+    /* on his own phone, when he logs his first */
+    self: [
+      "Evening, {name}. The app's been expecting you. This round's yours, surely.",
+      "There he is! First one on the board, {name} — your shout next, obviously.",
+    ],
+    /* race commentary lines while he's on the board with nothing logged */
+    paddock: [
+      "{name} is at the track but yet to trouble the scorer. Classic {name}.",
+      "{name}: present, upright and mysteriously drinkless.",
+    ],
+    /* race commentary lines once he's drinking */
+    needle: [
+      "{name} is {tally} in. His round remains theoretical.",
+      "{tally} for {name}, and the wallet's not been seen since Wednesday.",
+    ],
+  },
+};
 
 /* ================= DATA ================= */
 /* cat: golden | pale | ipa | bitter | mild | stout | cider | perry | fruit */
@@ -1044,6 +1148,8 @@ listEl.addEventListener("click", e=>{
   refreshStats();
   if(["h+","h-","p+","p-","up","down"].includes(btn.dataset.act)){
     renderRace(); scheduleSync(); checkBadges();
+    try{ checkRoasts(); }catch(err){}
+    if(["h+","p+"].includes(btn.dataset.act)) maybeOfferMat();
     if(["h+","p+"].includes(btn.dataset.act) && !cleanName(state.name)){
       showWelcome();
       showToast("⚠ Add your name up top or the lads won't see this!");
@@ -1256,6 +1362,7 @@ const BADGES = [
   {id:"county",   e:"🗺️", name:"County Hopper",  hint:"Ciders from 4 different counties"},
   {id:"collector",e:"🎯", name:"The Collector",  hint:"Try 10 different drinks"},
   {id:"stayer",   e:"🐴", name:"The Stayer",     hint:"Go the distance: 5 pints in a day"},
+  {id:"mats",     e:"🎴", name:"Card Sharp",     hint:"Deal 30 beer mats in The Snug"},
 ];
 const BADGE_BY_ID = Object.fromEntries(BADGES.map(b=>[b.id,b]));
 
@@ -1287,17 +1394,23 @@ function computeBadges(){
   if(counties.size>=4) b.push("county");
   if(tried.size>=10) b.push("collector");
   if(todayHalves>=10) b.push("stayer");
+  if(((state.snug||{}).dealt||0)>=30) b.push("mats");
   return b;
 }
 
-function showToast(text){
+function showToast(text, opts){
+  opts = opts || {};
   const box = document.getElementById("toasts");
   if(!box) return;
   const t = document.createElement("div");
-  t.className = "toast";
+  t.className = "toast" + (opts.amber ? " amber" : "");
   t.textContent = text;
+  if(opts.tap){
+    t.classList.add("tap");
+    t.addEventListener("click", ()=>{ try{ opts.tap(); }catch(e){} t.remove(); });
+  }
   box.appendChild(t);
-  setTimeout(()=>t.remove(), 3800);
+  setTimeout(()=>t.remove(), opts.ms || 3800);
 }
 
 function checkBadges(){
@@ -1372,6 +1485,396 @@ function renderTrophies(){
     `<div class="trophy${earned.has(b.id)?" won":""}"><span class="te">${b.e}</span><span class="tn">${b.name}</span><span class="th">${earned.has(b.id)?"In the cabinet!":b.hint}</span></div>`
   ).join("");
 }
+/* ================= THE SNUG: BEER MATS =================
+   The deck lives here. Every card is [front, back] (origins are
+   [front, verdict, back]). Add/trim freely — ids are hashed from the
+   front text, so edits don't upset anyone's "seen" list. */
+const SNUG_CATS = {
+  trivia:{chip:"Trivia",        tag:"PUB TRIVIA",    col:"#B26B15"},
+  riddle:{chip:"Riddles",       tag:"RIDDLE",        col:"#4C7A3A"},
+  origin:{chip:"True or myth?", tag:"TRUE OR MYTH?", col:"#7A4CB8"},
+  joke:  {chip:"Jokes",         tag:"GROANER",       col:"#B23B4B"},
+  fest:  {chip:"This festival", tag:"THIS FESTIVAL", col:"#8A6A1F"},
+};
+const MATS_SRC = {
+trivia: [
+["What does ABV stand for?","Alcohol By Volume — the percentage of the drink that's pure alcohol."],
+["Perry is made the same way as cider, but from what?","Pears — proper perry pears, mostly too bitter to eat."],
+["What's the actual difference between ale and lager?","The yeast. Ale yeast ferments warm and fast at the top; lager yeast works cold and slow at the bottom."],
+["What does CAMRA stand for?","The Campaign for Real Ale — founded in 1971 by four blokes on a drinking holiday in Ireland."],
+["Which country drinks the most beer per head?","The Czech Republic — roughly double what the UK manages."],
+["Most beer is made from which grain?","Barley — malted: soaked, sprouted, then roasted."],
+["What part of the plant is a hop?","The flower. The cones give beer its bitterness — and smell fantastic by the sackful."],
+["How many pints in a firkin?","72 — it's a 9-gallon cask, the standard size behind most beer festivals."],
+["What's in a snakebite?","Half lager, half cider. Add blackcurrant and it's a snakebite & black."],
+["What does the crown or CE stamp on a pint glass certify?","That it truly holds a full pint. Selling short measures has been outlawed since Magna Carta days."],
+["Porter beer is named after whom?","London's street and river porters, who couldn't get enough of it in the 1700s."],
+["Which West Country county is the spiritual home of scrumpy?","Somerset — though Devon will fight you for it."],
+["What does IPA stand for?","India Pale Ale — pale ale hopped up hard for the long sea voyage to British India."],
+["What makes an ale a 'cask ale'?","It's alive — unfiltered, still fermenting in the cask it's served from, no added gas."],
+["A UK pint is how many millilitres?","568 — a good 95ml more than the puny American pint."],
+["How many pints in a gallon?","Eight."],
+["What makes a beer a 'session' beer?","Low strength — around 4% or under — so you can stay on it all session and still find the door."],
+["Arthur Guinness signed the lease on his Dublin brewery for how long?","9,000 years — signed in 1759, at £45 a year."],
+["What's wassailing?","Singing and cider-soaked toasting to the apple trees in January, to wake the orchard for a good harvest."],
+["What's the proper word for the study of beer?","Zythology — from the Greek 'zythos'. You're all field researchers tonight."],
+["The soft wooden peg tapped into a cask to let it breathe is called what?","A spile."],
+["A kriek is a Belgian beer fermented with which fruit?","Cherries."],
+["Hundreds of pubs are called the Royal Oak. Whose oak was it?","Charles II's — he hid in one at Boscobel after losing the Battle of Worcester in 1651."],
+["What's said to be the most common pub name in Britain?","The Red Lion — with The Crown and The Royal Oak forever chasing it."],
+["What's a beer engine?","The handpump on the bar — each pull lifts cask ale up from the cellar. No gas involved."],
+["By UK rules, cider must contain at least how much apple juice?","35%. Anything less can't legally call itself cider."],
+["What temperature should cask ale be served at?","Cellar temperature — 11 to 13°C. Cool, not cold. It's not warm, whatever tourists say."],
+["In Cockney rhyming slang, what's a 'pig's ear'?","A beer."],
+["How many ravens must be kept at the Tower of London, by tradition?","Six — or the kingdom falls. They keep a spare on staff."],
+["What's a collector of beer mats called?","A tegestologist. Congratulations — tonight you're one too."],
+["What was the UK's first ever registered trade mark, in 1876?","The Bass red triangle — trade mark No. 1."],
+["The German beer purity law of 1516 allowed water, barley and hops. What did it leave out?","Yeast — nobody knew it existed yet."],
+["Which English county has two entirely separate coastlines?","Devon — one on the Bristol Channel, one on the English Channel. Explains all the cider."],
+["Clacton Pier first opened in which decade?","The 1870s — 27 July 1871, built as the town's landing dock before it was ever about fun."],
+["In darts, what's the highest possible checkout?","170 — treble 20, treble 20, bullseye."],
+["What's the maximum break in snooker?","147 — fifteen reds with blacks, then all the colours."],
+["How many pins in traditional English pub skittles?","Nine — ten-pin bowling just added one more."],
+["A yard of ale holds roughly how many pints?","About two and a half. Drinking one at speed rarely ends with dignity."],
+["What's the perfect hand in cribbage?","29 — three fives and a jack, with the matching five turned up."],
+["How many tiles in a standard set of dominoes?","28 — double blank up to double six."],
+["Ordering a 'mother-in-law' at an old London bar got you what?","Stout and bitter."],
+["What's cenosillicaphobia?","The fear of an empty glass. A made-up word — but a very real condition in this hall."],
+],
+riddle: [
+["What gets wetter the more it dries?","A towel."],
+["I speak without a mouth and hear without ears. What am I?","An echo."],
+["What has a neck but no head, and a body full of drink?","A bottle."],
+["What has hands but can't hold a pint?","A clock."],
+["The more you take, the more you leave behind. What are they?","Footsteps."],
+["What can you catch but never throw?","A cold."],
+["What has one eye but can't see?","A needle."],
+["What goes up but never comes down?","Your age."],
+["I'm tall when I'm young and short when I'm old. What am I?","A candle."],
+["Which month has 28 days?","All of them."],
+["What belongs to you, but your mates use it far more than you do?","Your name."],
+["What has a bottom at the top?","Your legs."],
+["Where does today come before yesterday?","In the dictionary."],
+["What breaks the moment you say its name?","Silence."],
+["Feed me and I live. Give me a drink and I die. What am I?","Fire."],
+["What runs all around the pub garden without moving?","The fence."],
+["What can travel all round the world while staying in a corner?","A stamp."],
+["What has a head and a tail but no body?","A coin."],
+["Drop me and I'm sure to crack. Smile at me and I'll smile back. What am I?","A mirror."],
+["What five-letter word gets shorter when you add two letters?","Short."],
+["Which word is always spelled wrong?","Wrong."],
+["Which building has the most stories?","The library."],
+["What can fill a whole room without taking up any space?","Light."],
+["It's always in front of you, but you can't see it. What is it?","The future."],
+["I have a head but never weep, and a body but never sleep. What am I?","A pint of beer. (Look down — you're probably holding the answer.)"],
+["You throw me out when you want to use me, and take me in when you're done. What am I?","An anchor."],
+["What's full of holes but still holds water?","A sponge."],
+["There are two in a corner, one in a room, and none in a house. What is it?","The letter R."],
+["What goes through towns and over hills but never moves?","A road."],
+["The one who makes it doesn't want it. The one who buys it doesn't use it. What is it?","A coffin."],
+["Forwards I'm heavy, backwards I'm not. What am I?","A ton."],
+],
+origin: [
+["Pub legend: “mind your Ps and Qs” comes from landlords chalking up Pints and Quarts, and telling rowdy drinkers to mind theirs.","PROBABLY MYTH","Lovely story, zero receipts. The earliest uses are about children learning to tell the letters p and q apart — the pub version came later and stuck because it's better."],
+["Pub legend: “hair of the dog” started as an actual medical cure — for dog bites.","TRUE","Old medicine reckoned a hair from the very dog that bit you, laid on the wound, would cure it. The morning pint borrowed the logic: a little of what did the damage."],
+["Pub legend: “wet your whistle” comes from tankards with a whistle baked into the rim — blow it for a refill.","MYTH","No whistling tankard has ever been dug up. Your “whistle” was simply slang for your mouth — drinkers were wetting theirs in writing 600 years ago."],
+["Pub legend: “rule of thumb” comes from brewers testing the beer's temperature with a thumb in the vat.","UNPROVEN","Nobody can show it. Most likely it just meant rough-and-ready measuring — a thumb is about an inch. (The grim wife-beating version sometimes told is definitely false.)"],
+["Pub legend: “drinking a toast” is called that because of actual toast.","TRUE","Spiced toast really was floated in wine and ale to mellow it. In time the person being honoured became the “toast” — the thing that made the drink worth having."],
+["Pub legend: “Dutch courage” comes from English soldiers steadying themselves with Dutch gin before battle.","TRUE","Fighting alongside — and against — the Dutch in the 1600s, English troops took to jenever, gin's grandad, and brought both the drink and the phrase home."],
+["Pub legend: “on the wagon” refers to condemned prisoners allowed one last drink before climbing back on the cart to the gallows.","MYTH","It's American and much later: teetotallers swore they'd sooner drink from the water wagon that damped the dusty streets than touch a drop. Fall off the water wagon, and…"],
+["Pub legend: “one for the road” was the condemned man's final drink on the ride to the gallows at Tyburn.","MYTH","Told with total confidence in every pub in England — but the phrase only turns up in the 20th century, long after the last Tyburn cart."],
+["Pub legend: “booze” comes from a Mr E.G. Booz, an American whiskey seller.","MYTH","Mr Booz existed, and sold whiskey in log-cabin-shaped bottles — but “bouse” was English drinking slang centuries before him, from an old Dutch word for guzzling."],
+["Old wisdom: “beer before wine and you'll feel fine; wine before beer, feel queer.”","MYTH","Scientists actually tested it in 2019 — 90 volunteers, proper trial. Order made no difference at all. The hangover depends on how much, not what came first."],
+["Pub legend: “groggy” comes from a Royal Navy admiral's coat.","TRUE","Admiral Vernon — “Old Grog”, for his grogram cloak — ordered the rum ration watered down in 1740. The drink became grog, and too much of it left you groggy."],
+["Pub legend: “three sheets to the wind” is sailor talk.","TRUE","Sheets are the ropes that trim a sail. Let three fly loose and the ship staggers about like — well, like a man with three sheets to the wind."],
+["Pub legend: “honeymoon” comes from newlyweds drinking honey mead for a month after the wedding.","PROBABLY MYTH","Sweet, but the dictionaries reckon it's simpler: love as sweet as honey and, like the moon, already starting to wane. Cheerful lot, the 1500s."],
+["Pub legend: we clink glasses so a splash of your drink lands in mine — proof neither of us poisoned the other.","MYTH","No evidence anyone ever screened for poison by slopping ale about. Clinking most likely just joins the whole table in the toast — the one moment every glass touches."],
+["Pub legend: pub signs are pictures because medieval punters couldn't read.","TRUE","Richard II ordered alehouses to hang signs in 1393 so the official ale taster could find them — and a picture worked for everyone. That's why it's the Red Lion, not 14 Tower Road."],
+["Pub legend: “scot-free” means escaping without paying your Scottish drinking debts.","MYTH (SORT OF)","Nothing to do with Scotland — a “scot” was an old levy or tavern reckoning. Dodge yours and you got off scot-free. So it IS about not paying the bill — just not a Scottish one."],
+["Pub legend: “teetotal” comes from a stuttering temperance speaker demanding t-t-total abstinence.","HALF-TRUE","The word really did come out of the 1830s temperance movement — Dicky Turner of Preston gets the credit — but the stutter is almost certainly the pub's own improvement."],
+["Pub legend: the ploughman's lunch has fed English farm workers since the Middle Ages.","MYTH","It feels ancient — it was largely cooked up in the 1960s by cheese marketing men to sell more cheese in pubs. The “ploughman's lunch” is younger than the M1."],
+["Pub legend: “stealing someone's thunder” started with actual thunder.","TRUE","Playwright John Dennis invented a new thunder machine in 1709. His play flopped; weeks later he heard his thunder in someone else's Macbeth and stood up roaring that they'd stolen it."],
+["Pub legend: “paint the town red” comes from a lord and his mates literally painting a town red.","TRUE","Melton Mowbray, 1837: the Marquess of Waterford's hunting party, roaring drunk, painted the tollgate, doors and a swan statue red. They paid for the damage — and coined the phrase."],
+["Pub legend: “codswallop” comes from Hiram Codd's marble-stoppered pop bottles — “Codd's wallop” being the beer drinker's sneer at fizzy pop.","PROBABLY MYTH","Codd and his bottles were real, and wallop was slang for beer — but “codswallop” doesn't appear in print until the 1950s. Suspiciously long after the bottles."],
+["Pub legend: “spinning a yarn” comes from sailors telling tales through long hours of rope-work.","TRUE (MOST LIKELY)","The phrase surfaces in sailors' slang around 1800 — crews swapping stories while twisting fibres into yarn for rope. The tale and the rope spun together."],
+],
+joke: [
+["A man walks into a bar.","Ouch."],
+["I'd tell you the one about the unfinished beer…","…but it's still brewing."],
+["Why does beer go through you so fast?","It doesn't have to change at Colchester."],
+["A skeleton walks into the bar.","“Pint of bitter please — and a mop.”"],
+["Shakespeare walks in and orders a pint. The landlord shakes his head.","“I can't serve you — you're bard.”"],
+["Past, present and future walk into a pub.","It was tense."],
+["A ghost drifts into the snug and asks for a whisky.","“Sorry — we don't serve spirits.”"],
+["“We don't serve time travellers in here,” says the landlord.","A time traveller walks into the pub."],
+["What do you call a fish with no eyes?","A fsh."],
+["A horse walks into the pub.","Landlord says: “Why the long face?”"],
+["A grasshopper hops up to the bar. Landlord: “We've got a drink named after you!”","“Really? You've got a drink called Kevin?”"],
+["What did the apple say at the cider press?","“Honestly? I'm crushed.”"],
+["I gave up beer once.","Worst twenty minutes of my life."],
+["What's a pirate's favourite letter?","You'd think it's R — but his first love be the C."],
+["Doctor says: “I'm afraid you'll have to give up drinking.”","“No fear, doctor — I've done it hundreds of times.”"],
+["My doctor told me to watch my drinking.","So I'm off to find a pub with a mirror."],
+["I'm reading a great book about anti-gravity.","Impossible to put down."],
+["Why can't you hear a pterodactyl using the gents?","The P is silent."],
+["I ordered a chicken and an egg off the internet.","I'll let you know."],
+["The brewery's brought out a beer called Responsibly.","So now everyone in here is drinking Responsibly."],
+["Apparently you can't use “beefstew” as a password.","It's not stroganoff."],
+["I bought some Velcro.","What a rip-off."],
+["Did you hear about the cheese factory that exploded in France?","There was nothing left but de Brie."],
+["I told my wife she was drawing her eyebrows on too high.","She looked surprised."],
+["A sandwich walks into the pub.","Landlord: “Sorry, we don't serve food.”"],
+["What's orange and sounds like a parrot?","A carrot."],
+["Why do cows have hooves instead of feet?","Because they lactose."],
+["A snail buys a sports car and paints a big S on the side. Why?","So when he tears past, everyone says: “Look at that S-car go!”"],
+["A bloke walks in with a slab of tarmac under his arm.","“Pint please — and one for the road.”"],
+["Why did the scarecrow win an award?","He was outstanding in his field."],
+["What's the best thing about Switzerland?","Not sure — but the flag's a big plus."],
+["Not to brag, but I finished the jigsaw in a week.","The box said 4–7 years."],
+["A man walks into the pub carrying jump leads. The landlord eyes him up.","“Alright, you can come in — but don't you start anything.”"],
+["A three-legged dog limps into a Wild West saloon.","“I'm lookin' for the man who shot my paw.”"],
+["Why don't crabs give to charity?","They're shellfish."],
+["I used to be a banker.","But I lost interest."],
+],
+};
+/* cards about tonight's actual list — computed from the data, so always true */
+function festMats(){
+  const out = [];
+  const L = BASE_DRINKS;
+  const ales = L.filter(d=>d.kind==="ale"), cids = L.filter(d=>d.kind==="cider");
+  const push = (f,b)=>out.push({cat:"fest", f, b});
+  const label = d=>`No. ${d.no}: ${d.name} from ${d.brew}`;
+  if(!L.length) return out;
+  const top = L.reduce((a,b)=>b.abv>a.abv?b:a);
+  push("Name the strongest thing on the whole festival list.", `${label(top)} — a frankly disrespectful ${top.abv.toFixed(1)}%.`);
+  const min = Math.min(...L.map(d=>d.abv));
+  const gentle = L.filter(d=>d.abv===min);
+  push("What's the gentlest drink on the printed list?", (gentle.length>1?`A tie at ${min.toFixed(1)}%: `:`At ${min.toFixed(1)}%: `) + gentle.map(d=>`${d.name} (${d.no})`).join(" and ") + ".");
+  if(cids.length){
+    const topc = cids.reduce((a,b)=>b.abv>a.abv?b:a);
+    push("Strongest thing on the cider side of the hall?", `${label(topc)} at ${topc.abv.toFixed(1)}% — treat it with respect.`);
+    const counties = [...new Set(cids.map(d=>d.county).filter(Boolean))];
+    if(counties.length) push("The ciders and perries come from how many different counties?", `${counties.length} — ${counties.join(", ")}.`);
+    const cc = {};
+    for(const d of cids) if(d.county) cc[d.county] = (cc[d.county]||0)+1;
+    const topCounty = Object.entries(cc).sort((a,b)=>b[1]-a[1])[0];
+    if(topCounty) push("Which county sent the most ciders and perries?", `${topCounty[0]}, with ${topCounty[1]} on the list.`);
+    const perries = cids.filter(d=>d.cat==="perry");
+    if(perries.length) push("How many perries on this year's list?", `${perries.length}: ${perries.map(d=>d.name).join(", ")}. Try one — there's a 🍐 trophy in it.`);
+  }
+  push("How many drinks are on the printed festival list all told?", `${L.length} — ${ales.length} cask ales plus ${cids.length} ciders and perries. Nobody's tried the lot. Yet.`);
+  const tally = {};
+  for(const d of L) tally[d.brew] = (tally[d.brew]||0)+1;
+  const topBrew = Object.entries(tally).sort((a,b)=>b[1]-a[1])[0];
+  if(topBrew) push("Which brewery or cider maker has the most drinks on this year's list?", `${topBrew[0]}, with ${topBrew[1]} of them.`);
+  const stouts = ales.filter(d=>d.cat==="stout").length, milds = ales.filter(d=>d.cat==="mild").length;
+  if(stouts||milds) push("For the dark side: how many stouts & porters on the cask list? Bonus point for the milds.", `${stouts} stouts and porters, plus ${milds} milds — the 🖤 Dark Arts trophy awaits.`);
+  const filbert = L.find(d=>d.name==="Filbert");
+  if(filbert) push("One beer on the list was brewed specially for this festival. Which?", `${label(filbert)}, ${filbert.abv.toFixed(1)}% — “Don't be a dummy! Try Filbert.”`);
+  const east = L.find(d=>d.name==="East Coast IPA"), west = L.find(d=>d.name==="West Coast IPA");
+  if(east&&west) push("Two IPAs on the list are twins — same malt, same hops — except for ONE ingredient. Which pair, and what's different?", `George's East Coast (${east.no}) and West Coast (${west.no}). Only the yeast differs. Order both, taste the argument.`);
+  const bg = L.find(d=>d.name==="Brewers Gold");
+  if(bg) push("One golden ale here was crowned Supreme Champion Beer of Britain — twice. Which?", `${label(bg)} — champion in 2005 and 2006.`);
+  const kev = L.find(d=>d.name==="Arise Sir Kevin");
+  if(kev) push("One pale ale on the list honours a rugby league legend. Which?", `${label(kev)} — brewed in tribute to Kevin Sinfield.`);
+  const sling = L.find(d=>d.name==="Singapore Sling");
+  if(sling) push("Which fruit cider crams in pineapple, gin, cherry brandy AND lime?", `${sling.no}: ${sling.name} by ${sling.brew}, ${sling.abv.toFixed(1)}%.`);
+  return out;
+}
+function matId(f){ let h=7; for(const c of f) h=(h*31+c.charCodeAt(0))>>>0; return h.toString(36); }
+let MATS_ALL = null;
+function allMats(){
+  if(MATS_ALL) return MATS_ALL;
+  const out = [];
+  for(const [f,b] of MATS_SRC.trivia) out.push({cat:"trivia", f, b});
+  for(const [f,b] of MATS_SRC.riddle) out.push({cat:"riddle", f, b});
+  for(const [f,v,b] of MATS_SRC.origin) out.push({cat:"origin", f, v, b});
+  for(const [f,b] of MATS_SRC.joke) out.push({cat:"joke", f, b});
+  out.push(...festMats());
+  for(const m of out) m.id = m.cat+":"+matId(m.f);
+  MATS_ALL = out;
+  return out;
+}
+function ensureSnug(){
+  if(!state.snug) state.snug = {};
+  const s = state.snug;
+  s.seen = s.seen || {};
+  s.dealt = s.dealt || 0;
+  s.sinceMat = s.sinceMat || 0;
+  s.filter = s.filter || "all";
+  return s;
+}
+function curMat(){
+  const s = ensureSnug();
+  return allMats().find(m=>m.id===s.cur) || null;
+}
+function dealMat(cat){
+  const s = ensureSnug();
+  if(cat) s.filter = cat;
+  const pool = allMats().filter(m=>s.filter==="all" || m.cat===s.filter);
+  if(!pool.length) return;
+  let unseen = pool.filter(m=>!(s.seen[m.cat]||[]).includes(m.id));
+  if(!unseen.length){
+    for(const m of pool) s.seen[m.cat] = (s.seen[m.cat]||[]).filter(id=>id!==m.id);
+    unseen = pool;
+    showToast("🔀 That's the whole deck — shuffling it back in.");
+  }
+  const m = unseen[Math.floor(Math.random()*unseen.length)];
+  (s.seen[m.cat] = s.seen[m.cat]||[]).push(m.id);
+  s.cur = m.id;
+  s.dealt += 1;
+  save();
+  renderSnug(true);
+  checkBadges();
+}
+function renderSnug(fresh){
+  const s = ensureSnug();
+  const mat = document.getElementById("mat");
+  if(!mat) return;
+  const chips = document.getElementById("snugchips");
+  chips.innerHTML = `<button class="chip${s.filter==="all"?" on":""}" data-mcat="all">🎲 Pot luck</button>` +
+    Object.entries(SNUG_CATS).map(([k,c])=>`<button class="chip${s.filter===k?" on":""}" data-mcat="${k}">${c.chip}</button>`).join("");
+  const m = curMat();
+  if(!m){ dealMat(); return; }
+  const C = SNUG_CATS[m.cat];
+  const longF = m.f.length > 110 ? " longer" : "";
+  const longB = (m.b||"").length > 110 ? " longer" : "";
+  /* swap content with the transition off, so a flipped mat doesn't spin back with the new card showing */
+  mat.style.transition = "none";
+  mat.classList.remove("flip");
+  mat.innerHTML = `
+    <span class="matface">
+      <span class="mattag" style="background:${C.col}">${C.tag}</span>
+      <span class="matmain${longF}">${esc(m.f)}</span>
+      <span class="mathint">tap to turn over ↷</span>
+    </span>
+    <span class="matface back">
+      <span class="mattag" style="background:${C.col}">${C.tag}</span>
+      ${m.v?`<span class="matverdict" style="color:${C.col}">${esc(m.v)}</span>`:""}
+      <span class="${m.v?"matsub":"matmain"+longB}">${esc(m.b)}</span>
+      <span class="mathint">tap to turn back</span>
+    </span>`;
+  requestAnimationFrame(()=>{ mat.style.transition = ""; });
+  const wrap = document.getElementById("matwrap");
+  if(fresh && wrap){ wrap.classList.remove("dealt"); void wrap.offsetWidth; wrap.classList.add("dealt"); }
+  const inView = allMats().filter(x=>s.filter==="all"||x.cat===s.filter);
+  const seenN = inView.filter(x=>(s.seen[x.cat]||[]).includes(x.id)).length;
+  document.getElementById("snugcounts").textContent = `Mat ${seenN} of ${inView.length} this shuffle · ${s.dealt} dealt all told`;
+  const nb = document.getElementById("nb-snug");
+  if(nb) nb.textContent = s.dealt ? s.dealt+" dealt" : "beer mats";
+}
+document.getElementById("mat").addEventListener("click", ()=>{
+  document.getElementById("mat").classList.toggle("flip");
+});
+document.getElementById("dealbtn").addEventListener("click", ()=>dealMat());
+document.getElementById("snugchips").addEventListener("click", e=>{
+  const b = e.target.closest(".chip"); if(!b) return;
+  dealMat(b.dataset.mcat);
+});
+/* every few logged drinks, offer a mat with the pint */
+function maybeOfferMat(){
+  const s = ensureSnug();
+  if(currentTab === "snug"){ s.sinceMat = 0; return; }
+  s.sinceMat += 1;
+  if(s.sinceMat < 3){ save(); return; }
+  s.sinceMat = 0; save();
+  showToast("🎴 While that settles — fresh beer mat in The Snug. Tap here.", {amber:true, ms:6000, tap:()=>{ showTab("snug"); dealMat(); window.scrollTo({top:0}); }});
+}
+
+/* ================= ROAST ENGINE =================
+   Watches the live board and delivers the ROASTS lines (top of file) at the
+   right moments. Per-phone and derived — the sync already carries the tallies,
+   so every phone fires the same gags without any extra plumbing. Only
+   transitions THIS phone actually witnesses get a toast: a phone opened late
+   adopts the current state silently, so nobody gets stale news. */
+function ensureRoastState(){
+  const day = dayDate(sessionKey());
+  if(!state.roasts || state.roasts.day !== day){
+    state.roasts = {day, fieldFirstAt:0, myFirstLogAt:0, selfDone:false, victims:{}, watchCount:0, watchLastAt:0, laterLastAt:0};
+  }
+  return state.roasts;
+}
+function roastKeyFor(name){
+  const toks = (cleanName(name)||"").toLowerCase().split(/\s+/);
+  for(const k of Object.keys(ROASTS)){
+    const alts = ROASTS[k].alts || [k];
+    if(toks.some(t=>alts.includes(t))) return k;
+  }
+  return null;
+}
+function roastLine(pool, vars){
+  let s = pool[Math.floor(Math.random()*pool.length)] || "";
+  for(const [k,v] of Object.entries(vars||{})) s = s.split("{"+k+"}").join(v);
+  return s;
+}
+function checkRoasts(){
+  const R = ensureRoastState();
+  const myDate = dayDate(sessionKey());
+  const me = myRider();
+  let dirty = false;
+  const riders = Object.values(refreshOthers()).filter(r=>!r.day || dayDate(r.day)===myDate);
+  /* when did the field first get going? earliest first-drink stamp in sight */
+  if(me.h>0 && !R.myFirstLogAt){ R.myFirstLogAt = Date.now(); dirty = true; }
+  const stamps = riders.filter(r=>(r.h||0)>0).map(r=>r.fs||0).filter(Boolean);
+  if(R.myFirstLogAt) stamps.push(R.myFirstLogAt);
+  if(stamps.length || riders.some(r=>(r.h||0)>0)){
+    const first = stamps.length ? Math.min(...stamps) : Date.now();
+    if(!R.fieldFirstAt || first < R.fieldFirstAt){ R.fieldFirstAt = first; dirty = true; }
+  }
+  /* a taste of my own medicine, on my own phone */
+  const selfK = roastKeyFor(state.name);
+  if(selfK && me.h>0 && !R.selfDone){
+    R.selfDone = true; dirty = true;
+    showToast(roastLine(ROASTS[selfK].self, {name:cleanName(state.name).split(" ").find(t=>roastKeyFor(t))||cleanName(state.name)}), {amber:true, ms:6500});
+  }
+  /* everyone else on the board */
+  const now = Date.now();
+  for(const r of riders){
+    const k = roastKeyFor(r.n); if(!k) continue;
+    const cfg = ROASTS[k];
+    const v = R.victims[k] || (R.victims[k] = {events:0, maxH:0, known:false});
+    const h = r.h||0;
+    const nm = cfg.display || cleanName(r.n);
+    if(!v.known){
+      v.known = true; v.maxH = h;
+      if(h>0) v.events = 2;   /* joined the show late — skip the arrival gags */
+      dirty = true;
+      continue;
+    }
+    if(h > v.maxH){
+      const prev = v.maxH;
+      v.maxH = h; v.events += 1; dirty = true;
+      if(prev === 0){
+        let late = "";
+        if(R.fieldFirstAt){
+          const hrs = Math.round((now - R.fieldFirstAt)/36e5);
+          if(hrs >= 2) late = "Only " + hrs + " hours behind the field. ";
+          else if(hrs >= 1) late = "An hour and change behind the field. ";
+        }
+        showToast(roastLine(cfg.first, {name:nm, late}), {amber:true, ms:8000});
+      } else if(v.events === 2 && h <= 3){
+        showToast(roastLine(cfg.second, {name:nm}), {amber:true, ms:6500});
+      } else if(v.events % 2 === 1 && now - (R.laterLastAt||0) > 25*60*1000){
+        R.laterLastAt = now;
+        showToast(roastLine(cfg.later, {name:nm, tally:pintsLabel(h)}), {amber:true, ms:6000});
+      }
+    }
+  }
+  /* the pre-arrival watch: field's drinking, the marked man is nowhere */
+  if(R.fieldFirstAt && now - R.fieldFirstAt > 40*60*1000 && R.watchCount < 3 && now - (R.watchLastAt||0) > 45*60*1000){
+    for(const k of Object.keys(ROASTS)){
+      if(roastKeyFor(state.name) === k) continue;
+      const v = R.victims[k];
+      if(v && v.maxH > 0) continue;
+      if(riders.some(x=>roastKeyFor(x.n)===k && (x.h||0)>0)) continue;
+      R.watchCount++; R.watchLastAt = now; dirty = true;
+      showToast(roastLine(ROASTS[k].watch, {name:ROASTS[k].display||k}), {amber:true, ms:6500});
+      break;
+    }
+  }
+  if(dirty) save();
+}
+
 function raceGlass(col){
   return `<svg width="24" height="32" viewBox="0 0 34 44" aria-hidden="true"><path d="M8 10 L10.5 41 a2 2 0 0 0 2 1.8 h9 a2 2 0 0 0 2-1.8 L26 10Z" fill="${col}" stroke="#00000040"/><path d="M7.4 4 h19.2 l-.5 7 H7.9Z" fill="#F6EFDF"/><circle cx="11" cy="6.5" r="2.4" fill="#FDF8EC"/><circle cx="17" cy="5.5" r="2.8" fill="#FDF8EC"/><circle cx="23" cy="6.5" r="2.4" fill="#FDF8EC"/></svg>`;
 }
@@ -1396,7 +1899,9 @@ function myRider(){
     if(e.r || e.note) reviews[id] = {r:e.r||0, note:(e.note||"").slice(0,280)};
   }
   const last = state.lastDrink && byId[state.lastDrink] ? byId[state.lastDrink].name : "";
-  return {id:DEVICE_ID, n:cleanName(state.name), own:state.crewOwner?1:0, x:(state.blocked||[]), h:hh, u:Math.round(u*10)/10, last, day:dk, t:Date.now(), reviews, b:computeBadges(), c:myCrew()};
+  /* fs = when I logged my first drink today, so late-joining phones can judge lateness honestly */
+  const fs = (state.roasts && state.roasts.day === dayDate(dk) && state.roasts.myFirstLogAt) || 0;
+  return {id:DEVICE_ID, n:cleanName(state.name), own:state.crewOwner?1:0, x:(state.blocked||[]), h:hh, u:Math.round(u*10)/10, last, day:dk, t:Date.now(), fs, reviews, b:computeBadges(), c:myCrew()};
 }
 let liveRiders = {};
 let othersCache = {};
@@ -1486,6 +1991,21 @@ function commentary(sorted){
     b+" lurking just off the pace — "+pintsLabel(gap)+" in it.");
   if(sorted.length>2 && !tail.h) lines.push(esc(tail.name)+" is still in the paddock. Everything alright over there?");
   if(sorted[0].last) lines.push(a+" leads the way, fuelled by "+esc(sorted[0].last)+".");
+  /* marked men get their own commentary */
+  for(const r of sorted){
+    const k = roastKeyFor(r.name); if(!k) continue;
+    const nm = esc(ROASTS[k].display || r.name);
+    if(!r.h) (ROASTS[k].paddock||[]).forEach(l=>lines.push(l.split("{name}").join(nm)));
+    else (ROASTS[k].needle||[]).forEach(l=>lines.push(l.split("{name}").join(nm).split("{tally}").join(pintsLabel(r.h))));
+  }
+  const R = state.roasts;
+  if(R && R.fieldFirstAt){
+    for(const k of Object.keys(ROASTS)){
+      const here = sorted.some(r=>roastKeyFor(r.name)===k);
+      const arrived = R.victims && R.victims[k] && R.victims[k].maxH > 0;
+      if(!here && !arrived) (ROASTS[k].watch||[]).slice(0,2).forEach(l=>lines.push(l.split("{name}").join(esc(ROASTS[k].display||k))));
+    }
+  }
   return pickLine(lines, seed);
 }
 
@@ -1688,6 +2208,7 @@ function ingest(raw){
 
 function afterIngest(changed){
   if(!changed) return;
+  try{ checkRoasts(); }catch(e){}
   try{ renderCrewCard(); }catch(e){}
   if(welcomeEl && !welcomeEl.hidden) renderCrewPicker();
   renderRace();
@@ -2011,6 +2532,7 @@ function showTab(tab){
   document.getElementById("panel-"+tab).classList.add("on");
   if(tab==="race"){ renderRace(); updateRaceStatus(); }
   if(tab==="menu"){ renderList(); }
+  if(tab==="snug"){ renderSnug(); }
   saveUi();
 }
 document.querySelectorAll(".navbtn").forEach(b=>{
@@ -2047,6 +2569,14 @@ checkBadges();
 refreshNameUi();
 pullHistory();
 startLive();
+/* nav badge for the snug + the roast watch (pre-arrival lines need a clock, not just sync events) */
+(function(){
+  const s = ensureSnug();
+  const nb = document.getElementById("nb-snug");
+  if(nb && s.dealt) nb.textContent = s.dealt+" dealt";
+})();
+setTimeout(()=>{ try{ checkRoasts(); }catch(e){} }, 12000);
+setInterval(()=>{ try{ checkRoasts(); }catch(e){} }, 5*60*1000);
 /* warn if this browser can't keep data between visits (private mode / some in-app browsers) */
 (function(){
   try{
