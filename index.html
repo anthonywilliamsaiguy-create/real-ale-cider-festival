@@ -290,10 +290,25 @@
   .crewtag{font-size:10.5px;color:var(--faint);background:var(--surface);border-radius:4px;padding:1px 5px;font-weight:700}
   .prevday{font-size:12.5px;color:var(--faint);font-style:italic}
 
-  /* ---------- sold out ---------- */
+  /* ---------- sold out / not on the bar ---------- */
   .tag.sold{color:#E8B0A8;background:#4A2620;letter-spacing:.06em}
   .card.soldout .cname{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:#8A5A50}
   .card.soldout .glass,.card.soldout .cbrew,.card.soldout .cdesc{opacity:.45}
+  .tag.noton{color:#C9B48A;background:#3A3225;letter-spacing:.06em}
+  .card.baroff .glass,.card.baroff .cbrew,.card.baroff .cdesc{opacity:.45}
+  .barrow{
+    display:flex;gap:10px;align-items:center;width:100%;
+    background:var(--surface2);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;margin-bottom:6px;font:inherit;color:inherit;
+    cursor:pointer;text-align:left;
+  }
+  .barrow.off{opacity:.5}
+  .barrow .bs{flex:none;width:24px;font-size:15px;font-weight:800;text-align:center;color:var(--good)}
+  .barrow.off .bs{color:var(--faint)}
+  .barrow.sold .bs{color:var(--bad)}
+  .barrow .bn{flex:1;min-width:0;font-size:14px;font-weight:700}
+  .barrow .bb{color:var(--muted);font-weight:400;font-size:12.5px}
+  .barrow .ba{flex:none;color:var(--accent);font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
   .minibtn{
     background:var(--surface2);border:1px solid var(--line);color:var(--muted);
     border-radius:10px;font:inherit;font-size:13px;font-weight:700;
@@ -468,7 +483,8 @@
       <div class="chips" id="chips"></div>
     </div>
     <p class="counts" id="counts"></p>
-    <button class="addtop" id="addtopbtn">➕ Add a drink that's not on the list</button>
+    <button class="addtop" id="barbtn">🍎 Cider bar — tick what's actually on</button>
+    <button class="addtop" id="addtopbtn" style="margin-top:2px">➕ Add a drink that's not on the list</button>
     <div id="list"></div>
   </section>
 
@@ -587,7 +603,8 @@
       <p class="mut"><strong>Your crew.</strong> You're in one crew at a time. Everyone in it sees each other's pints, ratings and notes, live. On the Race tab you can tap another crew's name to peek at their race — that doesn't move you, it's just a look. Tasting notes are shared with everyone at the festival, whatever crew they're in, so you get the benefit of the whole room's opinion.</p>
       <p class="mut"><strong>The race.</strong> Every half pint moves your glass a furlong. It runs all night and only resets when you tap <em>New session</em> on your own phone. Ratings, notes and trophies always carry over.</p>
       <p class="mut"><strong>Bored?</strong> That tab is beer mats for the table — trivia, riddles, phrase origins and groaners. Deal one, read it out, let the table argue, flip it for the answer. The deck won't repeat itself until you've been through the lot.</p>
-      <p class="mut"><strong>If the signal drops</strong> everything keeps working on your phone and syncs when you're back. Cask run dry? Open it and tap <em>Mark sold out</em>. Something not listed? Add it at the bottom of the menu.</p>
+      <p class="mut"><strong>The bar changes.</strong> Only some ciders are out at a time — tap <em>🍎 Cider bar</em> at the top of the menu and tick what's actually on. Cask run dry? Open it and tap <em>Mark sold out</em>. One person marks it and it flags on everyone's phones, newest change wins.</p>
+      <p class="mut"><strong>If the signal drops</strong> everything keeps working on your phone and syncs when you're back. Something not listed? Add it at the bottom of the menu.</p>
     </div>
     <div class="infocard">
       <h3>Small print</h3>
@@ -610,7 +627,7 @@
 </nav>
 
 <script>
-const BUILD = 32;
+const BUILD = 33;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -911,7 +928,7 @@ function rebuildDrinks(){
 
 /* ================= STATE ================= */
 const KEY = "clacton-ale-trail-2026";
-let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, lastDrink:null, sessionDay:"", blocked:[], blockedCrews:[], crewOwner:false, ownedCrews:[], crewLabels:{}};
+let state = {name:"", crew:"", drinks:{}, mates:{}, custom:[], soldOut:{}, bar:{}, lastDrink:null, sessionDay:"", blocked:[], blockedCrews:[], crewOwner:false, ownedCrews:[], crewLabels:{}};
 try{ const raw = localStorage.getItem(KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); }catch(e){}
 /* The "day" only rolls over when someone taps New Day — no automatic midnight reset. */
 if(!state.sessionDay){
@@ -931,6 +948,42 @@ function sessionKey(){ return state.sessionDay; }
     try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
   }
 })();
+/* Sold-out went SHARED in build 33: the bar map {id:{s,t}} syncs to everyone
+   (s: 0 = on the bar, 1 = sold out, 2 = not out yet; newest t wins).
+   Fold any old local-only sold marks in, then retire state.soldOut. */
+(function(){
+  state.bar = state.bar || {};
+  for(const id of Object.keys(state.soldOut||{})){
+    if(!state.bar[id]) state.bar[id] = {s:1, t:Date.now()};
+  }
+  delete state.soldOut;
+})();
+function isSold(id){ return ((state.bar||{})[id]||{}).s === 1; }
+function isOff(id){ return ((state.bar||{})[id]||{}).s === 2; }
+function setBar(id, s){
+  state.bar = state.bar || {};
+  state.bar[id] = {s, t: Date.now()};
+  save(); scheduleSync();
+}
+function mergeBar(bar){
+  if(!bar) return false;
+  state.bar = state.bar || {};
+  let changed = false;
+  for(const [id, e] of Object.entries(bar)){
+    if(!e || typeof e.s !== "number") continue;
+    let t = e.t || 0; if(t && t < 1e12) t *= 1000;   /* payload carries seconds */
+    const cur = state.bar[id];
+    if(!cur || (cur.t||0) < t){ state.bar[id] = {s: e.s, t}; changed = true; }
+  }
+  if(changed) save();
+  return changed;
+}
+function barForPayload(){
+  const entries = Object.entries(state.bar||{}).sort((a,b)=>(b[1].t||0)-(a[1].t||0)).slice(0,60);
+  const out = {};
+  for(const [id,e] of entries) out[id] = {s:e.s, t:Math.floor((e.t||0)/1000)};
+  return out;
+}
 function dayDate(d){ return String(d||"").split(".")[0]; }
 function startNewDay(){
   const base = new Date().toLocaleDateString("en-CA");
@@ -980,6 +1033,7 @@ let hideSold = false;
 let sortMode = 0; // 0 = list order, 1 = ABV asc, 2 = ABV desc
 let query = "";
 let addFormOpen = false;
+let barOpen = false;
 let currentTab = "menu";
 const openIds = new Set();
 
@@ -1013,7 +1067,7 @@ function buildChips(){
   for(const k of ["cider","perry","fruit","golden","pale","ipa","bitter","mild","stout","other"])
     h += mk(k, CAT[k].label, CAT[k].col);
   h += `<button class="chip${triedOnly?" on":""}" data-cat="__tried">✓ Tried</button>`;
-  h += `<button class="chip${hideSold?" on":""}" data-cat="__hidesold">Hide sold out</button>`;
+  h += `<button class="chip${hideSold?" on":""}" data-cat="__hidesold">On the bar now</button>`;
   chipsEl.innerHTML = h;
 }
 chipsEl.addEventListener("click", e=>{
@@ -1034,9 +1088,13 @@ document.getElementById("addtopbtn").addEventListener("click", ()=>{
   if(f) f.scrollIntoView({behavior:"smooth", block:"center"});
   const n = document.getElementById("an-name"); if(n) n.focus();
 });
+document.getElementById("barbtn").addEventListener("click", ()=>{
+  barOpen = !barOpen; renderList();
+  if(barOpen) window.scrollTo({top:0});
+});
 
 document.getElementById("dicebtn").addEventListener("click", ()=>{
-  const pool = visibleDrinks().filter(d=>!state.soldOut[d.id] && !hasAnyCount(entry(d.id)));
+  const pool = visibleDrinks().filter(d=>!isSold(d.id) && !isOff(d.id) && !hasAnyCount(entry(d.id)));
   if(!pool.length){ showToast("🎲 Nothing left untried in this view — you've done the lot!"); return; }
   const d = pool[Math.floor(Math.random()*pool.length)];
   openIds.add(d.id);
@@ -1061,7 +1119,7 @@ document.getElementById("sortbtn").addEventListener("click", ()=>{
 
 function visibleDrinks(){
   let out = DRINKS.filter(d=>{
-    if(hideSold && state.soldOut[d.id]) return false;
+    if(hideSold && (isSold(d.id) || isOff(d.id))) return false;
     if(triedOnly){ const e = entry(d.id); if(!hasAnyCount(e) && !e.r && !e.note) return false; }
     else if(filterCat!=="all" && d.cat!==filterCat) return false;
     if(query){
@@ -1101,14 +1159,16 @@ function cardHTML(d){
   const t = tEntry(d.id);
   const tried = !!(hasAnyCount(e)||e.r||e.note);
   const open = openIds.has(d.id);
-  const sold = !!state.soldOut[d.id];
+  const sold = isSold(d.id);
+  const off = !sold && isOff(d.id);
   const mates = mateReviewsFor(d.id);
   const tags = [`<span class="tag abv">${d.abv.toFixed(1)}%</span>`,`<span class="tag">${d.style}</span>`];
   if(sold) tags.unshift(`<span class="tag sold">SOLD OUT</span>`);
+  if(off) tags.unshift(`<span class="tag noton">NOT OUT YET</span>`);
   if(d.dry) tags.push(`<span class="tag">${DRY[d.dry]||d.dry}</span>`);
   if(d.county) tags.push(`<span class="tag">${d.county}</span>`);
   if(d.abv>=6) tags.push(`<span class="tag strong">⚠ strong</span>`);
-  return `<article class="card${tried?" tried":""}${open?" open":""}${sold?" soldout":""}" id="card-${d.id}">
+  return `<article class="card${tried?" tried":""}${open?" open":""}${sold?" soldout":""}${off?" baroff":""}" id="card-${d.id}">
     <button class="cardhead" data-id="${d.id}" aria-expanded="${open}">
       ${glassSVG(d)}
       <span class="cmain">
@@ -1157,6 +1217,7 @@ function cardHTML(d){
         </div>
         <div class="ctlrow">
           <button class="minibtn${sold?" on":""}" data-act="sold" data-id="${d.id}">${sold?"↩ Back on sale":"🚫 Mark sold out"}</button>
+          ${d.kind==="cider"?`<button class="minibtn${off?" on":""}" data-act="off" data-id="${d.id}">${off?"🍺 It's on the bar":"📦 Not out yet"}</button>`:""}
           ${d.kind==="custom"?`<button class="minibtn del" data-act="del" data-id="${d.id}">🗑 Remove</button>`:""}
         </div>
         <button class="btn donebtn" data-act="done" data-id="${d.id}">✓ Done</button>
@@ -1187,9 +1248,38 @@ function addCardHTML(){
   </div>`;
 }
 
+/* the cider-bar tick sheet: what's physically out right now, shared with everyone */
+function barSheetHTML(){
+  const cids = BASE_DRINKS.filter(d=>d.kind==="cider")
+    .slice().sort((a,b)=>parseInt(a.no.slice(1),10)-parseInt(b.no.slice(1),10));
+  const onN = cids.filter(d=>!isSold(d.id)&&!isOff(d.id)).length;
+  const rows = cids.map(d=>{
+    const sold = isSold(d.id), off = isOff(d.id);
+    return `<button class="barrow${sold?" off sold":off?" off":""}" data-bar="${d.id}">
+      <span class="bs">${sold?"🚫":off?"✗":"✓"}</span>
+      <span class="bn">${d.no}. ${esc(d.name)} <span class="bb">· ${esc(d.brew)}${sold?" · SOLD OUT":off?" · not out":""}</span></span>
+      <span class="ba">${d.abv.toFixed(1)}%</span>
+    </button>`;
+  }).join("");
+  return `<div class="addcard open">
+    <div class="addtitle">🍎 The cider bar — what's actually on?</div>
+    <p class="counts" style="margin:0 0 10px">${onN} of ${cids.length} on the bar. Tap a cider to flip it between ✓ on and ✗ not out (tapping a 🚫 sold-out one puts it back on sale). Changes go to everyone's phones.</p>
+    <div class="btnrow" style="margin:0 0 10px">
+      <button class="btn ghost" id="barnone">✗ None are out</button>
+      <button class="btn ghost" id="barall">✓ All on</button>
+    </div>
+    ${rows}
+    <button class="btn donebtn" id="bardone" style="margin-top:8px">✓ Done</button>
+  </div>`;
+}
 function renderList(){
   refreshOthers();
   try{ refreshNameUi(); }catch(e){}
+  if(barOpen){
+    countsEl.textContent = "";
+    listEl.innerHTML = barSheetHTML();
+    return;
+  }
   const vis = visibleDrinks();
   countsEl.textContent = `Showing ${vis.length} of ${DRINKS.length} drinks`;
   let h = "";
@@ -1212,6 +1302,25 @@ function renderList(){
 listEl.addEventListener("click", e=>{
   const btn = e.target.closest("button");
   if(!btn) return;
+  /* --- cider bar sheet --- */
+  if(btn.id === "bardone"){ barOpen = false; renderList(); return; }
+  if(btn.dataset.bar){
+    const id = btn.dataset.bar;
+    const cur = ((state.bar||{})[id]||{}).s || 0;
+    setBar(id, cur === 0 ? 2 : 0);   /* on -> not out; not-out or sold -> back on */
+    renderList();
+    return;
+  }
+  if(btn.id === "barnone" || btn.id === "barall"){
+    const s = btn.id === "barnone" ? 2 : 0;
+    armTwoStage(btn, btn.id === "barnone" ? "All ciders → not out. Sure?" : "All ciders → on. Sure?", ()=>{
+      const now = Date.now();
+      state.bar = state.bar || {};
+      for(const d of BASE_DRINKS) if(d.kind === "cider") state.bar[d.id] = {s, t: now};
+      save(); scheduleSync(); renderList();
+    });
+    return;
+  }
   if(btn.id === "addbtn"){ addFormOpen = true; renderList(); document.getElementById("an-name").focus(); return; }
   if(btn.id === "an-cancel"){ addFormOpen = false; renderList(); return; }
   if(btn.id === "an-save"){
@@ -1250,14 +1359,23 @@ listEl.addEventListener("click", e=>{
     return;
   }
   if(btn.dataset.act === "sold"){
-    if(state.soldOut[id]) delete state.soldOut[id]; else state.soldOut[id] = true;
-    save(); renderList();
+    const was = isSold(id);
+    setBar(id, was ? 0 : 1);
+    showToast(was ? "↩ Back on sale — everyone's phones get it" : "🚫 Sold out — flagged on everyone's phones");
+    renderList();
+    return;
+  }
+  if(btn.dataset.act === "off"){
+    const was = isOff(id);
+    setBar(id, was ? 0 : 2);
+    showToast(was ? "🍺 Back on the bar — shared with everyone" : "📦 Marked not-out — shared with everyone");
+    renderList();
     return;
   }
   if(btn.dataset.act === "del"){
     armTwoStage(btn, "Sure? Tap again", ()=>{
       state.custom = (state.custom||[]).filter(c=>c.id!==id);
-      delete state.drinks[id]; delete state.soldOut[id];
+      delete state.drinks[id]; delete (state.bar||{})[id];
       save(); rebuildDrinks(); renderList(); refreshStats();
     });
     return;
@@ -1471,7 +1589,8 @@ function armTwoStage(btn, armedLabel, action){
 
 document.getElementById("resetbtn").addEventListener("click", e=>{
   armTwoStage(e.currentTarget, "Wipe MY drinks? Tap again", ()=>{
-    state = {name: state.name, drinks: {}, mates: {}, custom: state.custom||[], soldOut: state.soldOut||{}, lastDrink: null, sessionDay: state.sessionDay};
+    state = {name: state.name, crew: state.crew, crewOwner: state.crewOwner, ownedCrews: state.ownedCrews||[], crewLabels: state.crewLabels||{},
+      drinks: {}, mates: {}, custom: state.custom||[], bar: state.bar||{}, snug: state.snug, lastDrink: null, sessionDay: state.sessionDay};
     save(); refreshStats(); renderList(); renderRace(); scheduleSync();
   });
 });
@@ -2071,7 +2190,7 @@ function myRider(){
   const last = state.lastDrink && byId[state.lastDrink] ? byId[state.lastDrink].name : "";
   /* fs = when I logged my first drink today, so late-joining phones can judge lateness honestly */
   const fs = (state.roasts && state.roasts.day === dayDate(dk) && state.roasts.myFirstLogAt) || 0;
-  return {id:DEVICE_ID, n:cleanName(state.name), own:state.crewOwner?1:0, x:(state.blocked||[]), h:hh, u:Math.round(u*10)/10, last, day:dk, t:Date.now(), fs, reviews, b:computeBadges(), c:myCrew()};
+  return {id:DEVICE_ID, n:cleanName(state.name), own:state.crewOwner?1:0, x:(state.blocked||[]), h:hh, u:Math.round(u*10)/10, last, day:dk, t:Date.now(), fs, reviews, b:computeBadges(), c:myCrew(), bar:barForPayload()};
 }
 let liveRiders = {};
 let othersCache = {};
@@ -2337,6 +2456,12 @@ function riderPayload(){
     for(const [k,v] of Object.entries(r.reviews||{})) if(v.r) ratingsOnly[k] = {r:v.r};
     body = JSON.stringify({...r, reviews:ratingsOnly});
   }
+  if(body.length > 3800){
+    /* last resort: keep only the freshest bar marks */
+    const r2 = JSON.parse(body);
+    r2.bar = Object.fromEntries(Object.entries(r2.bar||{}).sort((a,b)=>(b[1].t||0)-(a[1].t||0)).slice(0,15));
+    body = JSON.stringify(r2);
+  }
   return body;
 }
 
@@ -2372,6 +2497,7 @@ function ingest(raw){
     const cur = liveRiders[r.id];
     if(cur && (cur.t||0) >= (r.t||0)) return false;
     liveRiders[r.id] = r;
+    try{ mergeBar(r.bar); }catch(e){}   /* shared sold-out / what's-on marks */
     return true;
   }catch(e){ return false; }
 }
