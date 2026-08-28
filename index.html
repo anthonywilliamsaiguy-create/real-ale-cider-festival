@@ -556,6 +556,15 @@
       <button id="newdaybtn" class="btn ghost">🌅 New session</button>
     </div>
     <div id="log"></div>
+    <div class="infocard" id="festcard" style="margin-top:16px" hidden>
+      <h3>🏁 Your festival so far</h3>
+      <p id="festline"></p>
+      <p class="mut" id="festdays"></p>
+      <p class="mut" id="festbest"></p>
+      <div class="btnrow" style="margin:10px 0 0">
+        <button class="btn" id="festsharebtn">📣 Share my festival</button>
+      </div>
+    </div>
     <div class="infocard" style="margin-top:16px">
       <h3>Trophy Cabinet</h3>
       <div class="tgrid" id="tgrid"></div>
@@ -627,7 +636,7 @@
 </nav>
 
 <script>
-const BUILD = 33;
+const BUILD = 34;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -1500,6 +1509,7 @@ function refreshStats(){
   renderLog();
   renderCrewCard();
   renderTrophies();
+  try{ renderFestival(); }catch(e){}
 }
 
 function renderLog(){
@@ -1522,6 +1532,80 @@ function renderLog(){
       </div>
       <div class="logv">${e.r===1?"👍":e.r===-1?"👎":""}</div>
     </div>`).join("");
+}
+
+/* ================= THE WHOLE FESTIVAL ================= */
+function festivalTotals(){
+  const days = {};                    /* date -> {h,p,u}, ".2" re-sessions folded in */
+  const tried = new Set(); const ups = []; let downs = 0;
+  for(const [id,e] of Object.entries(state.drinks)){
+    const d = byId[id]; if(!d) continue;
+    let any = false;
+    for(const [dk,c] of Object.entries(e.days||{})){
+      if(!((c.h||0)||(c.p||0))) continue;
+      const date = dayDate(dk);
+      const t = days[date] || (days[date] = {h:0,p:0,u:0});
+      t.h += c.h||0; t.p += c.p||0;
+      t.u += ((c.h||0)*0.284 + (c.p||0)*0.568) * d.abv;
+      any = true;
+    }
+    if(any || e.r) tried.add(id);
+    if(e.r===1) ups.push(d.name);
+    if(e.r===-1) downs++;
+  }
+  const dayList = Object.entries(days).sort((a,b)=>a[0]<b[0]?-1:1);
+  let halves=0, units=0;
+  for(const [,t] of dayList){ halves += t.h + t.p*2; units += t.u; }
+  return {dayList, tried:tried.size, ups, downs, halves, units};
+}
+function dayName(date){
+  try{ return new Date(date+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short"}); }catch(e){ return date; }
+}
+function renderFestival(){
+  const card = document.getElementById("festcard");
+  if(!card) return;
+  const f = festivalTotals();
+  if(!f.halves && !f.tried){ card.hidden = true; return; }
+  card.hidden = false;
+  const badges = computeBadges();
+  document.getElementById("festline").textContent =
+    `${f.tried} of ${DRINKS.length} drinks tried · ${pintsLabel(f.halves)} · ~${fmt(f.units)} units · ${badges.length} ${badges.length===1?"trophy":"trophies"}`;
+  document.getElementById("festdays").textContent =
+    f.dayList.length > 1 ? "By day: " + f.dayList.map(([d,t])=>`${dayName(d)} ${fmtPints(t.h + t.p*2)}`).join(" · ") + " pints" : "";
+  const best = f.ups.slice(0,4).join(", ") + (f.ups.length>4 ? ` +${f.ups.length-4} more` : "");
+  document.getElementById("festbest").textContent =
+    (f.ups.length ? `👍 Backed: ${best}` : "") + (f.downs ? `${f.ups.length?" · ":""}👎 Swerved: ${f.downs}` : "");
+}
+document.getElementById("festsharebtn").addEventListener("click", async ()=>{
+  const f = festivalTotals();
+  const badges = computeBadges();
+  const who = state.name ? state.name+"'s" : "My";
+  const lines = [`🍻 ${who} 29th Clacton Real Ale & Cider Festival`,
+    `${f.tried} of ${DRINKS.length} drinks · ${pintsLabel(f.halves)} · ~${fmt(f.units)} units over ${f.dayList.length} ${f.dayList.length===1?"day":"days"}`];
+  if(f.dayList.length > 1) lines.push(f.dayList.map(([d,t])=>`${dayName(d)} ${fmtPints(t.h + t.p*2)}`).join(" · ") + " pints");
+  if(badges.length) lines.push(`🏆 ${badges.map(id=>BADGE_BY_ID[id]?BADGE_BY_ID[id].e+" "+BADGE_BY_ID[id].name:"").filter(Boolean).join(", ")}`);
+  if(f.ups.length) lines.push(`👍 ${f.ups.join(", ")}`);
+  if(f.downs) lines.push(`👎 ${f.downs} swerved`);
+  lines.push("", "📲 " + location.href.split("#")[0].split("?")[0]);
+  const text = lines.join("\n");
+  const btn = document.getElementById("festsharebtn");
+  if(navigator.share){
+    try{ await navigator.share({text}); return; }
+    catch(err){ if(err && err.name==="AbortError") return; }
+  }
+  try{ await navigator.clipboard.writeText(text); btn.textContent = "Copied — paste it in the chat!"; }
+  catch(err){ btn.textContent = "Couldn't share on this browser"; }
+  setTimeout(()=>{ btn.textContent = "📣 Share my festival"; }, 2500);
+});
+/* one friendly nudge as the hall heads for last orders (doors shut at 10) */
+function checkLastOrders(){
+  const now = new Date();
+  const hm = now.getHours()*60 + now.getMinutes();
+  if(hm < 21*60+25 || hm >= 22*60) return;
+  const today = now.toLocaleDateString("en-CA");
+  if(state.lastOrdersDay === today) return;
+  state.lastOrdersDay = today; save();
+  showToast("🔔 Last orders before long — anything you meant to try? Tap for the dice.", {amber:true, ms:8000, tap:()=>{ showTab("menu"); document.getElementById("dicebtn").click(); }});
 }
 
 const nameInput = document.getElementById("myname");
@@ -2871,8 +2955,8 @@ startLive();
   const nb = document.getElementById("nb-snug");
   if(nb && s.dealt) nb.textContent = s.dealt+" dealt";
 })();
-setTimeout(()=>{ try{ checkRoasts(); }catch(e){} }, 12000);
-setInterval(()=>{ try{ checkRoasts(); }catch(e){} }, 5*60*1000);
+setTimeout(()=>{ try{ checkRoasts(); }catch(e){} try{ checkLastOrders(); }catch(e){} }, 12000);
+setInterval(()=>{ try{ checkRoasts(); }catch(e){} try{ checkLastOrders(); }catch(e){} }, 5*60*1000);
 /* warn if this browser can't keep data between visits (private mode / some in-app browsers) */
 (function(){
   try{
