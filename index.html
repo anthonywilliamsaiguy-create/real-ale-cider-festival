@@ -627,7 +627,7 @@
 </nav>
 
 <script>
-const BUILD = 38;
+const BUILD = 39;
 
 /* ================= ROASTS =================
    Gentle, targeted stick for specific mates, delivered by toasts and the race
@@ -1007,6 +1007,26 @@ function barForPayload(){
   for(const [id,e] of entries) out[id] = {s:e.s, t:Math.floor((e.t||0)/1000)};
   return out;
 }
+/* Build 39, one-crew weekend (Anthony's orders): everyone lands in The Lads.
+   - a phone with no crew defaults straight into it
+   - the old "Tony & Kirstie" crew folds into it
+   - the bare "thelads" label gets its proper spaces back
+   Ownership is recomputed from ownedCrews, so Anthony keeps the keys. */
+const DEFAULT_CREW = "The Lads";
+(function(){
+  const before = JSON.stringify([state.crew, state.crewOwner, state.ownedCrews, state.crewLabels]);
+  if(!cleanName(state.crew)) state.crew = DEFAULT_CREW;
+  if(crewKey(state.crew) === "tonykirstie") state.crew = DEFAULT_CREW;
+  if(crewKey(state.crew) === crewKey(DEFAULT_CREW)) state.crew = DEFAULT_CREW;
+  state.ownedCrews = (state.ownedCrews||[]).filter(k=>k !== "tonykirstie");
+  state.crewLabels = state.crewLabels || {};
+  delete state.crewLabels["tonykirstie"];
+  state.crewLabels[crewKey(DEFAULT_CREW)] = DEFAULT_CREW;
+  state.crewOwner = state.ownedCrews.includes(crewKey(state.crew));
+  if(JSON.stringify([state.crew, state.crewOwner, state.ownedCrews, state.crewLabels]) !== before){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  }
+})();
 function dayDate(d){ return String(d||"").split(".")[0]; }
 function startNewDay(){
   const base = new Date().toLocaleDateString("en-CA");
